@@ -19,11 +19,11 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-
-	count, err := dir.CheckDirForFType(args.Root[1], fType)
+	files := map[string]string{}
+	count, err := dir.CheckDirForFType(args.Root[1], fType, files)
 	if err != nil {
 		log.Fatal(err)
 	}
 	fmt.Printf("%d total %s files\n", count, fType)
-	// fmt.Printf("number of go files: %d", numFType)
+	fmt.Println(files)
 }

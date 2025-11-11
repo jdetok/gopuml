@@ -8,14 +8,15 @@ import (
 	"github.com/jdetok/gopuml/cli"
 	"github.com/jdetok/gopuml/pkg/conf"
 	"github.com/jdetok/gopuml/pkg/dir"
+	"github.com/jdetok/gopuml/pkg/parse"
 )
 
 func main() {
 	// get args passed with program execution
 	args := *cli.ParseArgs()
-	rootDir := *args.ArgMap["root"]
-	confFile := *args.ArgMap["conf"]
-	ftyp := *args.ArgMap["ftyp"]
+	rootDir := *args.ArgMap[cli.ROOT]
+	confFile := *args.ArgMap[cli.CONF]
+	ftyp := *args.ArgMap[cli.FTYP]
 
 	fmt.Println("init flag:", args.Init)
 
@@ -27,16 +28,33 @@ func main() {
 		log.Fatal(err)
 	}
 
-	fmt.Println(cnf.JSONConf)
+	if args.Init {
+		fmt.Println("conf file successfully created at", cnf.CnfPath)
+	} else {
+		fmt.Printf("conf file at %s successfully read and decoded into conf struct\n",
+			cnf.CnfPath)
+	}
+
+	// fmt.Println(cnf)
 	// get the passed file type, recursively loop through root to find files
 	// with that type
-	dirMap, err := dir.MapFiles(rootDir, ftyp, cnf.JSONConf.ExcludeDirs)
+	dirMap, err := dir.MapFiles(rootDir, ftyp, cnf.ExcludeDirs)
 	if err != nil {
 		log.Fatal(err)
 	}
-	fmt.Printf("%d dirs within \"%s\" contain %s files\n", len(*dirMap),
-		rootDir, ftyp)
-	fmt.Println(*dirMap)
-
-	// dirMap.ReadAll()
+	// fmt.Printf("%d dirs within \"%s\" contain %s files\n", len(*dirMap),
+	// 	rootDir, ftyp)
+	// fmt.Println(*dirMap)
+	f, err := dirMap.OpenFile("cli", "cli.go")
+	if err != nil {
+		log.Fatal(err)
+	}
+	rgxPtrns := parse.NewRegexPtrns()
+	rgxReady, err := rgxPtrns.CompileRegex()
+	if err != nil {
+		log.Fatal(err)
+	}
+	if err := rgxReady.FileParser(f); err != nil {
+		log.Fatal(err)
+	}
 }

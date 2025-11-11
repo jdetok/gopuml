@@ -23,11 +23,6 @@ func MapFiles(rootDir, ftyp string, excludeDirs []string) (*DirMap, error) {
 	if err != nil {
 		return nil, &errd.FileOpenError{Path: rootDir, Err: err}
 	}
-	// get absolute path of rootDir
-	// abs, err := filepath.Abs(rootDir)
-	// if err != nil {
-	// 	return nil, &errd.FileAbsError{Path: rootDir, Err: err}
-	// }
 
 	// init empty DirMap to return
 	dm := DirMap{}

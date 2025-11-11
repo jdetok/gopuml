@@ -9,13 +9,9 @@ import (
 
 // read the .gopuml.json config file
 
-type GoPumlConf struct {
-	// ConfFile *os.File
-	JSONConf
-}
-
 // read from JSON config file
-type JSONConf struct {
+type GoPumlConf struct {
+	CnfPath     string
 	ProjectName string   `json:"project_name"`
 	ProjectRoot string   `json:"project_root"`
 	ExcludeDirs []string `json:"exclude_dirs"`
@@ -24,44 +20,49 @@ type JSONConf struct {
 
 func GetConf(fname string) (*GoPumlConf, error) {
 	var gp GoPumlConf
-	_, err := gp.OpenConfigF(fname)
-	if err != nil {
+	if err := gp.OpenConfigF(fname); err != nil {
 		return nil, err
 	}
-	// gp.ConfFile = f
 	return &gp, nil
 }
 
-func (gp *GoPumlConf) OpenConfigF(fname string) (*os.File, error) {
-	var f *os.File
+// attempt read the file at fname - if doesn't exist, call CreateConf
+func (cnf *GoPumlConf) OpenConfigF(fname string) error {
 	f, err := os.Open(fname)
 	if err == nil {
-		if err := gp.JSONConf.ReadConf(f); err != nil {
-			return f, &errd.ConfDecodeError{Path: fname, Err: err}
+		if err := json.NewDecoder(f).Decode(cnf); err != nil {
+			return &errd.ConfDecodeError{Path: fname, Err: err}
 		}
-		return f, nil
+		defer f.Close()
+		cnf.CnfPath = f.Name()
+		return nil
 	}
-	return gp.JSONConf.CreateConf(fname)
+	return cnf.CreateConf(fname)
 }
 
 // conf file exists - decode the JSON to JSONConf struct fields
-func (jc *JSONConf) ReadConf(f *os.File) error {
-	return json.NewDecoder(f).Decode(jc)
+func (cnf *GoPumlConf) ReadConf(f *os.File) error {
+	return json.NewDecoder(f).Decode(cnf)
 }
 
 // conf file does not exist - create one in the root dir
-func (jc *JSONConf) CreateConf(fname string) (*os.File, error) {
-
+func (cnf *GoPumlConf) CreateConf(fname string) error {
 	f, err := os.Create(fname)
 	if err != nil {
-		return nil, &errd.FileCreateError{Path: fname, Err: err}
+		return &errd.FileCreateError{Path: fname, Err: err}
 	}
-	b, err := json.MarshalIndent(jc, "", "    ")
+	defer f.Close()
+
+	// get bytes of encoded and indented JSON
+	b, err := json.MarshalIndent(cnf, "", "    ")
 	if err != nil {
-		return nil, &errd.JSONEncodeError{FName: fname, Err: err}
+		return &errd.JSONEncodeError{FName: fname, Err: err}
 	}
+
+	// write json bytes to JSON conf
 	if _, err := f.Write(b); err != nil {
-		return nil, &errd.WriterError{WriterLoc: f.Name(), NumBytes: len(b), Err: err}
+		return &errd.WriterError{WriterLoc: f.Name(), NumBytes: len(b), Err: err}
 	}
-	return f, nil
+	cnf.CnfPath = f.Name()
+	return nil
 }

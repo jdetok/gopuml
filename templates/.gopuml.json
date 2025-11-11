@@ -1,6 +1,8 @@
 {
     "project_name": "",
     "project_root": "",
-    "exclude_dirs": [],
+    "exclude_dirs": [
+        ".git"
+    ],
     "puml_out": ""
 }

@@ -10,7 +10,7 @@ import (
 // read the .gopuml.json config file
 
 type GoPumlConf struct {
-	ConfFile *os.File
+	// ConfFile *os.File
 	JSONConf
 }
 
@@ -24,12 +24,11 @@ type JSONConf struct {
 
 func GetConf(fname string) (*GoPumlConf, error) {
 	var gp GoPumlConf
-	f, err := gp.OpenConfigF(fname)
+	_, err := gp.OpenConfigF(fname)
 	if err != nil {
 		return nil, err
 	}
-	gp.ConfFile = f
-	// gp.ExcludeDirs = []string{}
+	// gp.ConfFile = f
 	return &gp, nil
 }
 
@@ -45,10 +44,12 @@ func (gp *GoPumlConf) OpenConfigF(fname string) (*os.File, error) {
 	return gp.JSONConf.CreateConf(fname)
 }
 
+// conf file exists - decode the JSON to JSONConf struct fields
 func (jc *JSONConf) ReadConf(f *os.File) error {
 	return json.NewDecoder(f).Decode(jc)
 }
 
+// conf file does not exist - create one in the root dir
 func (jc *JSONConf) CreateConf(fname string) (*os.File, error) {
 
 	f, err := os.Create(fname)

@@ -12,10 +12,12 @@ import (
 
 func main() {
 	// get args passed with program execution
-	args := *cli.MapArgs()
-	rootDir := *args["root"]
-	confFile := *args["conf"]
-	ftyp := *args["ftyp"]
+	args := *cli.ParseArgs()
+	rootDir := *args.ArgMap["root"]
+	confFile := *args.ArgMap["conf"]
+	ftyp := *args.ArgMap["ftyp"]
+
+	fmt.Println("init flag:", args.Init)
 
 	// read the args for root and conf, join as filepath,
 	// read or create .gopuml.json conf file

@@ -2,7 +2,6 @@ package conf
 
 import (
 	"encoding/json"
-	"fmt"
 	"os"
 
 	"github.com/jdetok/gopuml/pkg/errd"
@@ -30,31 +29,31 @@ func GetConf(fname string) (*GoPumlConf, error) {
 		return nil, err
 	}
 	gp.ConfFile = f
-	gp.ExcludeDirs = []string{}
+	// gp.ExcludeDirs = []string{}
 	return &gp, nil
-}
-
-func (gp *GoPumlConf) ReadConf(f *os.File) {
-	buf := []byte{200}
-	f.Read(buf)
-	fmt.Print(string(buf))
 }
 
 func (gp *GoPumlConf) OpenConfigF(fname string) (*os.File, error) {
 	var f *os.File
 	f, err := os.Open(fname)
 	if err == nil {
-		// gp.ReadConf(f)
+		if err := gp.JSONConf.ReadConf(f); err != nil {
+			return f, &errd.ConfDecodeError{Path: fname, Err: err}
+		}
 		return f, nil
 	}
-	return gp.JSONConf.CreateConfFile(fname)
+	return gp.JSONConf.CreateConf(fname)
 }
 
-func (jc *JSONConf) CreateConfFile(fname string) (*os.File, error) {
+func (jc *JSONConf) ReadConf(f *os.File) error {
+	return json.NewDecoder(f).Decode(jc)
+}
+
+func (jc *JSONConf) CreateConf(fname string) (*os.File, error) {
 
 	f, err := os.Create(fname)
 	if err != nil {
-		return nil, &errd.FileCreateError{FName: fname, Err: err}
+		return nil, &errd.FileCreateError{Path: fname, Err: err}
 	}
 	b, err := json.MarshalIndent(jc, "", "    ")
 	if err != nil {

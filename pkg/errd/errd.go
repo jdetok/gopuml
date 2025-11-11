@@ -16,24 +16,44 @@ func (m *ErrMeta) GetCaller() {
 	m.Caller = runtime.FuncForPC(pc).Name()
 }
 
+type ConfDecodeError struct {
+	ErrMeta
+	Path string
+	Err  error
+}
+
+func (e *ConfDecodeError) Error() string {
+	return fmt.Sprintf("error decoding JSON conf file at %s\n%v", e.Path, e.Err)
+}
+
 type FileCreateError struct {
 	ErrMeta
-	FName string
-	Err   error
+	Path string
+	Err  error
 }
 
 func (e *FileCreateError) Error() string {
-	return fmt.Sprintf("failed to create file %s\n%v", e.FName, e.Err)
+	return fmt.Sprintf("failed to create file %s\n%v", e.Path, e.Err)
 }
 
 type FileOpenError struct {
 	ErrMeta
-	FName string
-	Err   error
+	Path string
+	Err  error
 }
 
 func (e *FileOpenError) Error() string {
-	return fmt.Sprintf("failed to open file %s\n%v", e.FName, e.Err)
+	return fmt.Sprintf("failed to open file %s\n%v", e.Path, e.Err)
+}
+
+type FileReadError struct {
+	ErrMeta
+	Path string
+	Err  error
+}
+
+func (e *FileReadError) Error() string {
+	return fmt.Sprintf("failed to read file %s\n%v", e.Path, e.Err)
 }
 
 type FileRecursionError struct {
@@ -46,6 +66,17 @@ type FileRecursionError struct {
 func (e *FileRecursionError) Error() string {
 	return fmt.Sprintf("recursive func failed to map %s files at %s\n%v",
 		e.Ftyp, e.Path, e.Err)
+}
+
+type FileAbsError struct {
+	ErrMeta
+	Path string
+	Err  error
+}
+
+func (e *FileAbsError) Error() string {
+	return fmt.Sprintf("failed to get absolute path of %s\n%v",
+		e.Path, e.Err)
 }
 
 type JSONEncodeError struct {

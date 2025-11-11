@@ -1,6 +1,10 @@
 {
-    "project_name": "",
-    "project_root": "",
-    "exclude_dirs": [".git", "z_docs", ""],
-    "puml_out": ""
+    "project_name": "gopuml",
+    "project_root": ".",
+    "exclude_dirs": [
+        ".git",
+        "z_docs",
+        "templates"
+    ],
+    "puml_out": "puml"
 }

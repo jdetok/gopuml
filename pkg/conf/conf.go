@@ -23,7 +23,7 @@ type JSONConf struct {
 	PumlOut     string   `json:"puml_out"`
 }
 
-func GetGoPumlConf(fname string) (*GoPumlConf, error) {
+func GetConf(fname string) (*GoPumlConf, error) {
 	var gp GoPumlConf
 	f, err := gp.OpenConfigF(fname)
 	if err != nil {
@@ -44,7 +44,7 @@ func (gp *GoPumlConf) OpenConfigF(fname string) (*os.File, error) {
 	var f *os.File
 	f, err := os.Open(fname)
 	if err == nil {
-		gp.ReadConf(f)
+		// gp.ReadConf(f)
 		return f, nil
 	}
 	return gp.JSONConf.CreateConfFile(fname)

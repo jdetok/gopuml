@@ -8,18 +8,21 @@ import (
 	"github.com/jdetok/gopuml/pkg/errd"
 )
 
-// Files type is an alias for map[string]string - map file names to dirs
-type DirFiles map[string]map[string]*os.File
+// DirMap is an alias for a nested map - directories mapped to file names,
+// which are mapped to *os.File (FileMap)
+type DirMap map[string]FileMap
+
+// FileMap maps a file name to a *os.File - FileMaps are mapped to DirMap
+type FileMap map[string]*os.File
 
 // return DirFiles (maps files to their dir) mapped recursively
 // .git directory is excluded | only files ending in ftyp are mapped
-func MapFiles(rootDir, ftyp string) (*DirFiles, error) {
-	df := DirFiles{}
-	df[rootDir] = map[string]*os.File{}
-	if err := df.MapRecur(rootDir, ftyp); err != nil {
+func MapFiles(rootDir, ftyp string) (*DirMap, error) {
+	dm := DirMap{}
+	if err := dm.MapRecur(rootDir, ftyp); err != nil {
 		return nil, &errd.FileRecursionError{Path: rootDir, Ftyp: ftyp, Err: err}
 	}
-	return &df, nil
+	return &dm, nil
 }
 
 // recursive function to map matching files to their appropriate directory
@@ -28,7 +31,7 @@ func MapFiles(rootDir, ftyp string) (*DirFiles, error) {
 // whether file ends in ftyp (HasSuffix). if the suffix matches the ftyp,
 // os.Open() is called on the file and the *os.File is mapped to the file name
 // a DirFiles type (alias for a map) must be declared and initialized first
-func (df DirFiles) MapRecur(dir, ftyp string) error {
+func (dm DirMap) MapRecur(dir, ftyp string) error {
 	entries, err := os.ReadDir(dir)
 	if err != nil {
 		return err
@@ -37,7 +40,7 @@ func (df DirFiles) MapRecur(dir, ftyp string) error {
 	for _, e := range entries {
 		path := filepath.Join(dir, e.Name()) // join file to root path
 		if e.IsDir() && !strings.HasPrefix(e.Name(), ".git") {
-			if err := df.MapRecur(path, ftyp); err != nil { // recursive call
+			if err := dm.MapRecur(path, ftyp); err != nil { // recursive call
 				return &errd.FileRecursionError{Path: path, Ftyp: ftyp, Err: err}
 			}
 			continue // after finishing recursive call
@@ -48,10 +51,10 @@ func (df DirFiles) MapRecur(dir, ftyp string) error {
 				if err != nil {
 					return &errd.FileOpenError{FName: path, Err: err}
 				}
-				if df[dir] == nil {
-					df[dir] = map[string]*os.File{}
+				if dm[dir] == nil {
+					dm[dir] = FileMap{}
 				}
-				df[dir][e.Name()] = f
+				dm[dir][e.Name()] = f
 			}
 		}
 	}

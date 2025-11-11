@@ -8,7 +8,7 @@ import (
 	"github.com/jdetok/gopuml/cli"
 	"github.com/jdetok/gopuml/pkg/conf"
 	"github.com/jdetok/gopuml/pkg/dir"
-	"github.com/jdetok/gopuml/pkg/parse"
+	"github.com/jdetok/gopuml/pkg/rgx"
 )
 
 func main() {
@@ -45,16 +45,16 @@ func main() {
 	// fmt.Printf("%d dirs within \"%s\" contain %s files\n", len(*dirMap),
 	// 	rootDir, ftyp)
 	// fmt.Println(*dirMap)
-	f, err := dirMap.OpenFile("cli", "cli.go")
+	f, err := dirMap.OpenFile("pkg/errd", "errd.go")
 	if err != nil {
 		log.Fatal(err)
 	}
-	rgxPtrns := parse.NewRegexPtrns()
-	rgxReady, err := rgxPtrns.CompileRegex()
+	rgxPtrns := rgx.NewRgxPtrns()
+	rgxReady, err := rgxPtrns.CompileRgx()
 	if err != nil {
 		log.Fatal(err)
 	}
-	if err := rgxReady.FileParser(f); err != nil {
+	if err := rgxReady.RgxParseFile(f); err != nil {
 		log.Fatal(err)
 	}
 }

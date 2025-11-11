@@ -1,5 +1,6 @@
 {
     "project_name": "",
     "project_root": "",
+    "exclude_dirs": [],
     "puml_out": ""
 }

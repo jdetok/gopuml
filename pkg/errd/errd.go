@@ -16,14 +16,36 @@ func (m *ErrMeta) GetCaller() {
 	m.Caller = runtime.FuncForPC(pc).Name()
 }
 
-type CreateFileError struct {
+type FileCreateError struct {
 	ErrMeta
 	FName string
 	Err   error
 }
 
-func (e *CreateFileError) Error() string {
+func (e *FileCreateError) Error() string {
 	return fmt.Sprintf("failed to create file %s\n%v", e.FName, e.Err)
+}
+
+type FileOpenError struct {
+	ErrMeta
+	FName string
+	Err   error
+}
+
+func (e *FileOpenError) Error() string {
+	return fmt.Sprintf("failed to open file %s\n%v", e.FName, e.Err)
+}
+
+type FileRecursionError struct {
+	ErrMeta
+	Path string
+	Ftyp string
+	Err  error
+}
+
+func (e *FileRecursionError) Error() string {
+	return fmt.Sprintf("recursive func failed to map %s files at %s\n%v",
+		e.Ftyp, e.Path, e.Err)
 }
 
 type JSONEncodeError struct {

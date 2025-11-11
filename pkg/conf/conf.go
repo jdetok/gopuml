@@ -2,6 +2,7 @@ package conf
 
 import (
 	"encoding/json"
+	"fmt"
 	"os"
 
 	"github.com/jdetok/gopuml/pkg/errd"
@@ -16,40 +17,44 @@ type GoPumlConf struct {
 
 // read from JSON config file
 type JSONConf struct {
-	ProjectName string `json:"project_name"`
-	ProjectRoot string `json:"project_root"`
-	PumlOut     string `json:"puml_out"`
+	ProjectName string   `json:"project_name"`
+	ProjectRoot string   `json:"project_root"`
+	ExcludeDirs []string `json:"exclude_dirs"`
+	PumlOut     string   `json:"puml_out"`
 }
 
-// return new GoPumlConf type
-func NewGoPumlConf(fname string) (*GoPumlConf, error) {
+func GetGoPumlConf(fname string) (*GoPumlConf, error) {
 	var gp GoPumlConf
 	f, err := gp.OpenConfigF(fname)
 	if err != nil {
 		return nil, err
 	}
 	gp.ConfFile = f
+	gp.ExcludeDirs = []string{}
 	return &gp, nil
 }
 
-// attempt to open config file at fname, create a new one if it doesn't exist
+func (gp *GoPumlConf) ReadConf(f *os.File) {
+	buf := []byte{200}
+	f.Read(buf)
+	fmt.Print(string(buf))
+}
+
 func (gp *GoPumlConf) OpenConfigF(fname string) (*os.File, error) {
 	var f *os.File
 	f, err := os.Open(fname)
 	if err == nil {
+		gp.ReadConf(f)
 		return f, nil
 	}
-	// create file (by marshalling JSONConf struct) if it doesn't exist
 	return gp.JSONConf.CreateConfFile(fname)
 }
 
-// create new file at fName, Marshall it to json (indented for ease of use),
-// write bytes to file
 func (jc *JSONConf) CreateConfFile(fname string) (*os.File, error) {
 
 	f, err := os.Create(fname)
 	if err != nil {
-		return nil, &errd.CreateFileError{FName: fname, Err: err}
+		return nil, &errd.FileCreateError{FName: fname, Err: err}
 	}
 	b, err := json.MarshalIndent(jc, "", "    ")
 	if err != nil {

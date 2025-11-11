@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"log"
+	"path/filepath"
 
 	"github.com/jdetok/gopuml/cli"
 	"github.com/jdetok/gopuml/pkg/conf"
@@ -10,20 +11,24 @@ import (
 )
 
 func main() {
-	args := cli.ParseArgs()
+	// get args passed with program execution
+	args := *cli.MapArgs()
 
-	fName := args.Root[1] + "/" + args.ConfFile[1]
-	fType := args.FType[1]
-
-	_, err := conf.NewGoPumlConf(fName)
+	// read the args for root and conf, join as filepath,
+	// read or create .gopuml.json conf file
+	confPath := filepath.Join(*args["root"], *args["conf"])
+	_, err := conf.GetGoPumlConf(confPath)
 	if err != nil {
 		log.Fatal(err)
 	}
-	files := map[string]string{}
-	count, err := dir.CheckDirForFType(args.Root[1], fType, files)
+
+	// get the passed file type, recursively loop through root to find files
+	// with that type
+	ftyp := *args["ftyp"]
+	fileMap, err := dir.MapFiles(*args["root"], ftyp)
 	if err != nil {
 		log.Fatal(err)
 	}
-	fmt.Printf("%d total %s files\n", count, fType)
-	fmt.Println(files)
+	fmt.Printf("%d total %s files\n", len(*fileMap), ftyp)
+	fmt.Println(*fileMap)
 }

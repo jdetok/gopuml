@@ -4,31 +4,42 @@ import (
 	"flag"
 )
 
-const DEFAULT_CONF_FILE = ".gopuml.json"
-const FTYPE_GO = ".go"
+const (
+	// flag to set location/name of config json file
+	CONF         = "conf"
+	DEFAULT_CONF = ".gopuml.json"
 
-type Args struct {
-	Root     [2]string // root of the project where gopuml is run
-	ConfFile [2]string // file location of .gopuml.json (default project root)
-	FType    [2]string // file type (currently only works with .go)
-}
+	// flag to set project root location
+	ROOT         = "root"
+	DEFAULT_ROOT = "."
+
+	// flag to set file type (currently only works with Go)
+	FTYP         = "ftyp"
+	DEFAULT_FTYP = ".go"
+)
+
+type ArgMap map[string]*string
 
 // parse flag args
-func ParseArgs() *Args {
-	var args = Args{
-		Root:     [2]string{"root", ""},
-		ConfFile: [2]string{"conf", ""},
-		FType:    [2]string{"ftype", ""},
+func MapArgs() *ArgMap {
+	root := ROOT
+	conf := CONF
+	ftyp := FTYP
+
+	var args = ArgMap{
+		ROOT: &root,
+		CONF: &conf,
+		FTYP: &ftyp,
 	}
 
-	// default to config file in the root directory
-	flag.StringVar(&args.ConfFile[1], "conf", DEFAULT_CONF_FILE,
-		"conf file location (default project root)")
-
-	flag.StringVar(&args.Root[1], "root", "",
+	flag.StringVar(args[ROOT], ROOT, DEFAULT_ROOT,
 		"root dir of project gopuml is called on")
 
-	flag.StringVar(&args.FType[1], "ftype", FTYPE_GO, "file type to look for")
+	flag.StringVar(args[CONF], CONF, DEFAULT_CONF,
+		"conf file location (default project root)")
+
+	flag.StringVar(args[FTYP], FTYP, DEFAULT_FTYP,
+		"file type to look for")
 
 	flag.Parse()
 

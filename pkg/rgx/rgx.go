@@ -26,7 +26,7 @@ const (
 	RGX_FUNC       = `^func\s+(?:\(([^)]*)\)\s*)?([A-Za-z_]\w*)\s*\(([^)]*)\)\s*\s*(?:([^{]+))\s*\{\s*$`
 	RGX_MTHD       = `^func\s+(?:\(([^)]*)\)\s*)?([A-Za-z_]\w*)\s*\(([^)]*)\)\s*\s*(?:([^{]+))\s*\{\s*$`
 	RGX_STRUCT     = `^type\s+(.+?)\s*struct\s*{\s*$`
-	RGX_STRUCT_FLD = `^\s*([A-Za-z_]\w*)\s+([^` + "`" + `\s/]+(?:\s+[^` + "`" + `\s/]+)*)\s*(.*)$`
+	RGX_STRUCT_FLD = `^(?:[^func]\s*)([A-Za-z_]\w*)\s+([^` + "`" + `\s/]+(?:\s+[^` + "`" + `\s/]+)*)\s*(.*)$`
 	RGX_STRUCT_END = `^\s*}\s*$`
 	RGX_TYPE_MAP   = `^type\s+(\w+)\s+(map\[.*)$`
 )
@@ -109,7 +109,7 @@ func (rr RgxReady) RgxParseFile(f *os.File) error {
 				continue
 			}
 			fmt.Println(res[0])
-			if strings.Contains(res[0], " struct ") {
+			if strings.Contains(res[0], "struct") {
 				structLines := rr.RgxParseStruct(scanner, &lineCount)
 				if structLines != nil {
 					fmt.Println(len(structLines), "lines from struct")
@@ -148,6 +148,12 @@ func (rr RgxReady) RgxParseStruct(s *bufio.Scanner, lineCount *int) [][]string {
 		matches, insideStruct = rr.RgxParseStructFld(structLine)
 		if matches == nil {
 			continue // might want to change this
+		}
+		if matches[0] == EMPTY {
+			continue
+		}
+		if matches[0] == STRUCTEND {
+			return lines
 		}
 		lines = append(lines, matches)
 	}

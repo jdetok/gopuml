@@ -45,12 +45,12 @@ func main() {
 	// fmt.Printf("%d dirs within \"%s\" contain %s files\n", len(*dirMap),
 	// 	rootDir, ftyp)
 	// fmt.Println(*dirMap)
-	f, err := dirMap.OpenFile("pkg/dir", "mapf.go")
+	f, err := dirMap.OpenFile("pkg/rgx", "rgx.go")
 	if err != nil {
 		log.Fatal(err)
 	}
-	rgxPtrns := rgx.NewRgxPtrns()
-	rgxReady, err := rgxPtrns.CompileRgx()
+	// rgxPtrns := rgx.NewRgxPtrns()
+	rgxReady, err := rgx.CompileRgx()
 	if err != nil {
 		log.Fatal(err)
 	}

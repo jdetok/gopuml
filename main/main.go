@@ -45,7 +45,7 @@ func main() {
 	// fmt.Printf("%d dirs within \"%s\" contain %s files\n", len(*dirMap),
 	// 	rootDir, ftyp)
 	// fmt.Println(*dirMap)
-	f, err := dirMap.OpenFile("pkg/errd", "errd.go")
+	f, err := dirMap.OpenFile("pkg/dir", "mapf.go")
 	if err != nil {
 		log.Fatal(err)
 	}

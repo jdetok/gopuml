@@ -17,31 +17,36 @@ const (
 	MTHD      = "method"    // match methods on a type
 	STRUCT    = "struct"    // match struct types
 	STRUCTFLD = "structFld" // match fields of a struct type
-	STRUCTEND = "structEnd" // match the END of a struct type - only '}'
+	ENDSTMNT  = "structEnd" // match the END of a struct type - only '}'
 	TYPEMAP   = "typeMap"   // match map types (map aliased to a type)
 
 	// vals in rgx map (regex patterns)
 	RGX_EMPTY      = `^\s*$`
 	RGX_CMNT       = `^\s*([/][/|*])\s*\w*$`
-	RGX_FUNC       = `^func\s+(?:\(([^)]*)\)\s*)?([A-Za-z_]\w*)\s*\(([^)]*)\)\s*\s*(?:([^{]+))\s*\{\s*$`
-	RGX_MTHD       = `^func\s+(?:\(([^)]*)\)\s*)?([A-Za-z_]\w*)\s*\(([^)]*)\)\s*\s*(?:([^{]+))\s*\{\s*$`
+	RGX_FUNC       = `^func\s+([A-Za-z_]\w*)\s*\(([^)]*)\)\s*\s*(?:([^{]+))\s*\{\s*$`
+	RGX_MTHD       = `^func\s+(?:\(([^)]*)\)\s*)([A-Za-z_]\w*)\s*\(([^)]*)\)\s*\s*(?:([^{]+))\s*\{\s*$`
 	RGX_STRUCT     = `^type\s+(.+?)\s*struct\s*{\s*$`
-	RGX_STRUCT_FLD = `^(?:[^func]\s*)([A-Za-z_]\w*)\s+([^` + "`" + `\s/]+(?:\s+[^` + "`" + `\s/]+)*)\s*(.*)$`
-	RGX_STRUCT_END = `^\s*}\s*$`
+	RGX_STRUCT_FLD = `^\s*([A-Za-z_]\w*)\s+([*\[\]\w.{}]+(?:\s*[\[\]\w.*{}]*)?)\s*([` + "`" + `].*[` + "`" + `]|\/\/.*)?\s*$`
+	RGX_ENDSTMNT   = `^\s*}\s*$`
 	RGX_TYPE_MAP   = `^type\s+(\w+)\s+(map\[.*)$`
 )
 
 // all regex patterns compiled ahead of time into RegexReady map type
-var RGX_MAP = map[string]string{
-	EMPTY:     RGX_EMPTY,
-	CMNT:      RGX_CMNT,
-	FUNC:      RGX_FUNC,
-	MTHD:      RGX_MTHD,
-	STRUCT:    RGX_STRUCT,
-	STRUCTFLD: RGX_STRUCT_FLD,
-	STRUCTEND: RGX_STRUCT_END,
-	TYPEMAP:   RGX_TYPE_MAP,
-}
+var (
+	// map regex consts to their type const
+	RGX_MAP = map[string]string{
+		EMPTY:     RGX_EMPTY,
+		CMNT:      RGX_CMNT,
+		FUNC:      RGX_FUNC,
+		MTHD:      RGX_MTHD,
+		STRUCT:    RGX_STRUCT,
+		STRUCTFLD: RGX_STRUCT_FLD,
+		ENDSTMNT:  RGX_ENDSTMNT,
+		TYPEMAP:   RGX_TYPE_MAP,
+	}
+	// check lines in this specific order
+	RGX_CHECK_ORDER = []string{STRUCT, TYPEMAP, FUNC, MTHD, CMNT}
+)
 
 // map regexp objext to item name (can be used through runtime to match to)
 type RgxReady map[string]*regexp.Regexp
@@ -50,9 +55,9 @@ type RgxFileMap map[string]RgxLineMap
 type RgxLineMap map[int]*RgxMatch
 
 type RgxMatch struct {
-	FindType string        // func, struct, struct field, etc
-	RawStr   string        // string where match was found
-	Groups   []RgxMatchGrp // groups of matches
+	FindType string   // func, struct, struct field, etc
+	MatchStr string   // string where match was found
+	Groups   []string // groups of matches
 }
 
 // can be one or the other
@@ -94,28 +99,25 @@ func CompileRgx() (*RgxReady, error) {
 // use bufio scanner to iterate through each line in passed file
 func (rr RgxReady) RgxParseFile(f *os.File) error {
 	defer f.Close()
+	fmt.Printf("parsing %s...\n", f.Name())
 	scanner := bufio.NewScanner(f) // scans one line at a time
 
 	lineCount := 0
-	// todo - set when inside struct (after struct is found)
-	// USE SWITCH - just switch no var
 	insideStruct := false
 	for scanner.Scan() {
 		lineCount++
 		line := scanner.Text()
 		if !insideStruct {
-			res := rr.RgxParseLine(line)
-			if res == nil {
+			rm := rr.RgxParseLine(line)
+			if rm == nil {
 				continue
 			}
-			fmt.Println(res[0])
-			if strings.Contains(res[0], "struct") {
+
+			switch rm.FindType {
+			case STRUCT:
 				structLines := rr.RgxParseStruct(scanner, &lineCount)
 				if structLines != nil {
 					fmt.Println(len(structLines), "lines from struct")
-					for _, line := range structLines {
-						fmt.Println(line[0])
-					}
 				}
 			}
 		}
@@ -126,45 +128,53 @@ func (rr RgxReady) RgxParseFile(f *os.File) error {
 
 // pass line bytes and linenum, check for regex matches
 // return matches and a bool signaling whether next line is within a struct
-func (rr RgxReady) RgxParseLine(line string) []string {
-	for _, rgx := range rr {
-		matches := rgx.FindStringSubmatch(line)
-		if matches == nil {
-			return nil
+func (rr RgxReady) RgxParseLine(line string) *RgxMatch {
+	var m RgxMatch
+	for _, key := range RGX_CHECK_ORDER {
+		rgx, ok := rr[key]
+		if !ok {
+			continue
 		}
-		return matches
+		if matches := rgx.FindStringSubmatch(line); matches != nil {
+			m.FindType = key
+			m.MatchStr = matches[0]
+			m.Groups = matches[1:]
+			groupStr := "<" + strings.Join(m.Groups, "> <") + ">"
+			fmt.Printf("MATCH: %s\nKEY: %s | GROUPS: %s\n\n", m.FindType, key, groupStr)
+			return &m
+		}
 	}
 	return nil
 }
 
 func (rr RgxReady) RgxParseStruct(s *bufio.Scanner, lineCount *int) [][]string {
 	insideStruct := true
+	startLine := *lineCount
 	var lines [][]string
-	fmt.Println("started struct scan at line", *lineCount)
+
 	for s.Scan() && insideStruct {
 		*lineCount++
 		var matches []string
 		structLine := s.Text()
+
 		matches, insideStruct = rr.RgxParseStructFld(structLine)
-		if matches == nil {
-			continue // might want to change this
-		}
-		if matches[0] == EMPTY {
+		if matches == nil || matches[0] == EMPTY {
 			continue
 		}
-		if matches[0] == STRUCTEND {
-			return lines
+		if matches[0] == ENDSTMNT {
+			break
 		}
 		lines = append(lines, matches)
 	}
-	fmt.Println("finished struct scan at line", *lineCount)
+
+	fmt.Printf("finished scanning struct from lines %d - %d\n", startLine, *lineCount)
 	return lines
 }
 
 func (rr RgxReady) RgxParseStructFld(line string) ([]string, bool) {
 	results := []string{}
-	if ok := rr[STRUCTEND].MatchString(line); ok {
-		return append(results, STRUCTEND), false
+	if ok := rr[ENDSTMNT].MatchString(line); ok {
+		return append(results, ENDSTMNT), false
 	}
 	if ok := rr[EMPTY].MatchString(line); ok {
 		return append(results, EMPTY), true

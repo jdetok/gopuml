@@ -5,7 +5,8 @@ import (
 	"fmt"
 	"os"
 	"regexp"
-	"strings"
+
+	"github.com/jdetok/gopuml/pkg/str"
 )
 
 // TODO: different pattern for methods/funcs
@@ -23,8 +24,8 @@ const (
 	// vals in rgx map (regex patterns)
 	RGX_EMPTY      = `^\s*$`
 	RGX_CMNT       = `^\s*([/][/|*])\s*\w*$`
-	RGX_FUNC       = `^func\s+([A-Za-z_]\w*)\s*\(([^)]*)\)\s*\s*(?:([^{]+))\s*\{\s*$`
-	RGX_MTHD       = `^func\s+(?:\(([^)]*)\)\s*)([A-Za-z_]\w*)\s*\(([^)]*)\)\s*\s*(?:([^{]+))\s*\{\s*$`
+	RGX_FUNC       = `^func\s*([A-Za-z_]\w*)\s*\(([^)]*)\)\s*\(?([^{)]*|[^{\s]+)?\)?\s*\{\s*$`
+	RGX_MTHD       = `^func\s+\(([^)]*)\)\s*?([A-Za-z_]\w*)\s*\(([^)]*)\)\s*\(?([^{)]*|[^{\s]+)?\)?\s*\{\s*$`
 	RGX_STRUCT     = `^type\s+(.+?)\s*struct\s*{\s*$`
 	RGX_STRUCT_FLD = `^\s*([A-Za-z_]\w*)\s+([*\[\]\w.{}]+(?:\s*[\[\]\w.*{}]*)?)\s*([` + "`" + `].*[` + "`" + `]|\/\/.*)?\s*$`
 	RGX_ENDSTMNT   = `^\s*}\s*$`
@@ -58,10 +59,11 @@ type RgxMatch struct {
 	FindType string   // func, struct, struct field, etc
 	MatchStr string   // string where match was found
 	Groups   []string // groups of matches
+	Typ      RgxMatchTyp
 }
 
 // can be one or the other
-type RgxMatchGrp struct {
+type RgxMatchTyp struct {
 	Fn RgxFuncGrp   // function struct
 	St RgxStructGrp // struct struct
 }
@@ -100,29 +102,32 @@ func CompileRgx() (*RgxReady, error) {
 func (rr RgxReady) RgxParseFile(f *os.File) error {
 	defer f.Close()
 	fmt.Printf("parsing %s...\n", f.Name())
-	scanner := bufio.NewScanner(f) // scans one line at a time
 
 	lineCount := 0
-	insideStruct := false
+	// insideStruct := false // used to handle struct fields
+	// scan each line of the file
+	scanner := bufio.NewScanner(f)
 	for scanner.Scan() {
 		lineCount++
-		line := scanner.Text()
-		if !insideStruct {
-			rm := rr.RgxParseLine(line)
-			if rm == nil {
-				continue
-			}
+		line := scanner.Text() // get string of current line
+		rm := rr.RgxParseLine(line)
+		if rm == nil {
+			continue
+		}
 
-			switch rm.FindType {
-			case STRUCT:
-				structLines := rr.RgxParseStruct(scanner, &lineCount)
-				if structLines != nil {
-					fmt.Println(len(structLines), "lines from struct")
+		switch rm.FindType {
+		// if a struct was found pass the scanner and find struct fields
+		case STRUCT:
+			matches := rr.RgxParseStruct(scanner, &lineCount)
+			if matches != nil {
+				for _, m := range matches {
+					fmt.Printf("%v\n", *m)
 				}
+				fmt.Println()
 			}
 		}
-	}
 
+	}
 	return nil
 }
 
@@ -139,48 +144,57 @@ func (rr RgxReady) RgxParseLine(line string) *RgxMatch {
 			m.FindType = key
 			m.MatchStr = matches[0]
 			m.Groups = matches[1:]
-			groupStr := "<" + strings.Join(m.Groups, "> <") + ">"
-			fmt.Printf("MATCH: %s\nKEY: %s | GROUPS: %s\n\n", m.FindType, key, groupStr)
+			groupStr := str.AngleWrap(m.Groups)
+			fmt.Printf("MATCH: %s\nKEY: %s | GROUPS: %s\n", m.FindType, key, groupStr)
+			if m.FindType != STRUCT {
+				fmt.Println()
+			}
 			return &m
 		}
 	}
 	return nil
 }
 
-func (rr RgxReady) RgxParseStruct(s *bufio.Scanner, lineCount *int) [][]string {
+func (rr RgxReady) RgxParseStruct(s *bufio.Scanner, lineCount *int) []*RgxMatch {
 	insideStruct := true
-	startLine := *lineCount
-	var lines [][]string
-
+	// startLine := *lineCount
+	matches := []*RgxMatch{}
 	for s.Scan() && insideStruct {
+		var rm *RgxMatch
 		*lineCount++
-		var matches []string
 		structLine := s.Text()
 
-		matches, insideStruct = rr.RgxParseStructFld(structLine)
-		if matches == nil || matches[0] == EMPTY {
-			continue
+		rm, insideStruct = rr.RgxParseStructFld(structLine)
+		if rm == nil {
+			if insideStruct {
+				continue
+			} else {
+				break
+			}
 		}
-		if matches[0] == ENDSTMNT {
-			break
-		}
-		lines = append(lines, matches)
+		matches = append(matches, rm)
 	}
 
-	fmt.Printf("finished scanning struct from lines %d - %d\n", startLine, *lineCount)
-	return lines
+	// fmt.Printf("finished scanning struct from lines %d - %d\n", startLine, *lineCount)
+	return matches
 }
 
-func (rr RgxReady) RgxParseStructFld(line string) ([]string, bool) {
-	results := []string{}
-	if ok := rr[ENDSTMNT].MatchString(line); ok {
-		return append(results, ENDSTMNT), false
+// match fields inside a struct, only called from RgxParseStruct
+// the bool returned determines whether the struct has more fields or not
+func (rr RgxReady) RgxParseStructFld(line string) (*RgxMatch, bool) {
+	// check for ; at end of struct def - send signal to end RgxParseStruct
+	if rr[ENDSTMNT].MatchString(line) {
+		return nil, false
 	}
-	if ok := rr[EMPTY].MatchString(line); ok {
-		return append(results, EMPTY), true
+	// if not a ; check for fields | if nil return nil but true continue signal
+	matches := rr[STRUCTFLD].FindStringSubmatch(line)
+	if matches == nil {
+		return nil, true
 	}
-	if results = rr[STRUCTFLD].FindStringSubmatch(line); results != nil {
-		return results, true
-	}
-	return nil, false
+	// if field found build match struct
+	return &RgxMatch{
+		FindType: STRUCTFLD,
+		MatchStr: matches[0],
+		Groups:   matches[1:],
+	}, true
 }

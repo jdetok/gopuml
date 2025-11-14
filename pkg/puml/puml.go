@@ -25,9 +25,6 @@ func ConsolePrompt() string {
 func (p *Puml) WriteOutput(dir, fname string) error {
 	var err error
 
-	// get bytes with formatted plantuml source code
-	b := p.Dgm.Out()
-
 	// check that directory exists
 	if _, err := os.Stat(dir); err != nil {
 		if errors.Is(err, fs.ErrNotExist) {
@@ -55,34 +52,41 @@ func (p *Puml) WriteOutput(dir, fname string) error {
 
 	// check if file exists, create if it doesn't
 	if info, err := os.Stat(pth); err == nil {
+		// FILE EXISTS: ask user whether to overwrite or exit
 		fsize := info.Size()
 		if fsize == 0 {
-			fmt.Printf("%s exists but is empty, overwrite? (y/n): ", pth)
+			fmt.Printf("** plantuml (.puml) file %s exists but is empty - overwrite? (Y/N): ", pth)
 			input := ConsolePrompt()
-			if input != "y" {
+			switch input {
+			case "n":
 				return fmt.Errorf("user declined to overwrite %s, exiting", pth)
 			}
 		} else {
-			fmt.Printf("%s exists but with %d bytes, overwrite? (y/n): ", pth, fsize)
+			fmt.Printf("** plantuml (.puml) file %s exists with %d bytes of content - overwrite? (Y/N): ", pth, fsize)
 			input := ConsolePrompt()
-			if input != "y" {
+			switch input {
+			case "n":
 				return fmt.Errorf("user declined to overwrite %s, exiting", pth)
 			}
 		}
+		// open EXISTING file only after confirming whether overwrite is ok
 		f, err = os.OpenFile(pth, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644)
 		if err != nil {
-			return err
-
+			return &errd.FileReadError{Path: pth, Err: err}
 		}
 	} else {
-		fmt.Printf("%s directory does not exist, creating\n", pth)
+		// FILE DOES NOT EXIST: CREATE AT THE GIVEN PATH
 		f, err = os.Create(pth)
 		if err != nil {
 			return &errd.FileCreateError{Path: pth, Err: err}
 		}
-		fmt.Printf("file successfully created at %s\n", dir)
+		fmt.Printf("plantuml file successfully created at %s\n", pth)
 	}
 
+	// get bytes with formatted plantuml source code (PumlWriter interface)
+	b := p.Dgm.Out()
+
+	// write bytes from PumlWriter implementation to file via io.Writer interface
 	n, err := f.Write(b)
 	if err != nil {
 		return &errd.FileWriteError{Path: fname, Err: err}

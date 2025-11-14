@@ -15,7 +15,9 @@ type Conf struct {
 	ProjectName string   `json:"project_name"`
 	ProjectRoot string   `json:"project_root"`
 	ExcludeDirs []string `json:"exclude_dirs"`
-	PumlOut     string   `json:"puml_out"`
+	OutDir      string   `json:"puml_out_dir"`
+	ClassF      string   `json:"class_diagram_file"`
+	ActF        string   `json:"activity_diagram_file"`
 }
 
 func GetConf(fname string) (*Conf, error) {

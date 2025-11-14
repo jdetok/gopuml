@@ -1,0 +1,5 @@
+@startuml Test Class Diagram
+class Test {
+	test string
+}
+@enduml

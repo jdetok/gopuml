@@ -62,11 +62,11 @@ type Rgx struct {
 	Structs []*RgxStruct
 }
 
-func NewRgx() (*Rgx, error) {
+func NewRgx() *Rgx {
 	return &Rgx{
 		ready:  *CompileRgx(),
 		PkgMap: RgxPkgMap{},
-	}, nil
+	}
 }
 
 // map regexp objext to item name (can be used through runtime to match to)
@@ -94,7 +94,7 @@ type RgxFunc struct {
 
 type RgxStruct struct {
 	Name   string
-	Fields []*RgxStructFld
+	Fields []RgxStructFld
 }
 
 type RgxStructFld struct {
@@ -174,7 +174,7 @@ func (r *Rgx) RgxParseFile(dir string, f *os.File) error {
 			for _, m := range matches {
 				fmt.Printf("%v\n", *m)
 				s.Fields = append(s.Fields,
-					&RgxStructFld{
+					RgxStructFld{
 						Name:  m.Groups[0],
 						DType: m.Groups[1],
 					},

@@ -8,6 +8,7 @@ import (
 	"github.com/jdetok/gopuml/cli"
 	"github.com/jdetok/gopuml/pkg/conf"
 	"github.com/jdetok/gopuml/pkg/dir"
+	"github.com/jdetok/gopuml/pkg/puml"
 	"github.com/jdetok/gopuml/pkg/rgx"
 )
 
@@ -35,7 +36,6 @@ func main() {
 			cnf.CnfPath)
 	}
 
-	// fmt.Println(cnf)
 	// get the passed file type, recursively loop through root to find files
 	// with that type
 	dirMap, err := dir.MapFiles(rootDir, ftyp, cnf.ExcludeDirs)
@@ -43,10 +43,10 @@ func main() {
 		log.Fatal(err)
 	}
 
-	r, err := rgx.NewRgx()
-	if err != nil {
-		log.Fatal(err)
-	}
+	// compile regex patterns
+	r := rgx.NewRgx()
+
+	// go through each file in the dirmap and match to regex patterns
 	if err := r.Parse(dirMap); err != nil {
 		log.Fatal(err)
 	}
@@ -54,28 +54,13 @@ func main() {
 		fmt.Println(*fn)
 	}
 	for _, st := range r.Structs {
-		fmt.Println(st.Name)
-		for _, sf := range st.Fields {
-			fmt.Println(*sf)
-		}
+		fmt.Println(st)
 	}
 
-	// rgxReady, err := rgx.CompileRgx()
-	// if err != nil {
-	// 	log.Fatal(err)
-	// }
-
-	// for d, fm := range *dirMap {
-	// 	for n := range fm {
-	// 		f, err := dirMap.OpenFile(d, n)
-	// 		if err != nil {
-	// 			log.Fatal(err)
-	// 		}
-
-	// 		if err := rgxReady.RgxParseFile(f); err != nil {
-	// 			log.Fatal(err)
-	// 		}
-	// 	}
-	// }
-
+	p := puml.Puml{
+		Dgm: &puml.UmlClass{Title: "Test Class Diagram"},
+	}
+	if err := p.WriteOutput(cnf.OutDir, cnf.ClassF); err != nil {
+		log.Fatal(err)
+	}
 }

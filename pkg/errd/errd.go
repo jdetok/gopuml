@@ -36,6 +36,16 @@ func (e *FileCreateError) Error() string {
 	return fmt.Sprintf("failed to create file %s\n%v", e.Path, e.Err)
 }
 
+type FileWriteError struct {
+	ErrMeta
+	Path string
+	Err  error
+}
+
+func (e *FileWriteError) Error() string {
+	return fmt.Sprintf("failed to create file %s\n%v", e.Path, e.Err)
+}
+
 type FileOpenError struct {
 	ErrMeta
 	Path string

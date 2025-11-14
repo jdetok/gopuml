@@ -6,5 +6,7 @@
         "z_docs",
         "templates"
     ],
-    "puml_out": "puml"
+    "puml_out_dir": "pumlout",
+    "class_diagram_file": "uml_class",
+    "activity_diagram_file": "uml_activity"
 }

@@ -4,5 +4,7 @@
     "exclude_dirs": [
         ".git"
     ],
-    "puml_out": ""
+    "puml_out_dir": "",
+    "class_diagram_file": "",
+    "activity_diagram_file": ""
 }

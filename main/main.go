@@ -42,30 +42,40 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	// fmt.Printf("%d dirs within \"%s\" contain %s files\n", len(*dirMap),
-	// 	rootDir, ftyp)
-	// fmt.Println(*dirMap)
-	// f, err := dirMap.OpenFile("pkg/rgx", "rgx.go")
+
+	r, err := rgx.NewRgx()
+	if err != nil {
+		log.Fatal(err)
+	}
+	if err := r.Parse(dirMap); err != nil {
+		log.Fatal(err)
+	}
+	for _, fn := range r.Funcs {
+		fmt.Println(*fn)
+	}
+	for _, st := range r.Structs {
+		fmt.Println(st.Name)
+		for _, sf := range st.Fields {
+			fmt.Println(*sf)
+		}
+	}
+
+	// rgxReady, err := rgx.CompileRgx()
 	// if err != nil {
 	// 	log.Fatal(err)
 	// }
 
-	rgxReady, err := rgx.CompileRgx()
-	if err != nil {
-		log.Fatal(err)
-	}
+	// for d, fm := range *dirMap {
+	// 	for n := range fm {
+	// 		f, err := dirMap.OpenFile(d, n)
+	// 		if err != nil {
+	// 			log.Fatal(err)
+	// 		}
 
-	for d, fm := range *dirMap {
-		for n := range fm {
-			f, err := dirMap.OpenFile(d, n)
-			if err != nil {
-				log.Fatal(err)
-			}
-
-			if err := rgxReady.RgxParseFile(f); err != nil {
-				log.Fatal(err)
-			}
-		}
-	}
+	// 		if err := rgxReady.RgxParseFile(f); err != nil {
+	// 			log.Fatal(err)
+	// 		}
+	// 	}
+	// }
 
 }

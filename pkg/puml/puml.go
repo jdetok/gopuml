@@ -1,6 +1,7 @@
 package puml
 
 import (
+	"bufio"
 	"errors"
 	"fmt"
 	"io/fs"
@@ -15,7 +16,16 @@ type Puml struct {
 	Dgm PumlWriter // different diagram structs
 }
 
+func ConsolePrompt() string {
+	r := bufio.NewReader(os.Stdin)
+	input, _ := r.ReadString('\n')
+	return strings.TrimSpace(strings.ToLower(input))
+}
+
 func (p *Puml) WriteOutput(dir, fname string) error {
+	var err error
+
+	// get bytes with formatted plantuml source code
 	b := p.Dgm.Out()
 
 	// check that directory exists
@@ -31,24 +41,46 @@ func (p *Puml) WriteOutput(dir, fname string) error {
 		}
 	}
 
-	var err error
-	var fsuf string = ".puml"
 	var f *os.File
 	defer f.Close()
 
-	// build full file path
+	// join dir and fname to path, trim any whitespace
 	pth := strings.TrimSpace(filepath.Join(dir, fname))
+
+	// if path doesn't already have puml suffix, add it
+	fsuf := ".puml"
 	if !strings.HasSuffix(pth, fsuf) {
 		pth += fsuf
 	}
 
-	if f, err = os.OpenFile(pth, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644); err != nil {
+	// check if file exists, create if it doesn't
+	if info, err := os.Stat(pth); err == nil {
+		fsize := info.Size()
+		if fsize == 0 {
+			fmt.Printf("%s exists but is empty, overwrite? (y/n): ", pth)
+			input := ConsolePrompt()
+			if input != "y" {
+				return fmt.Errorf("user declined to overwrite %s, exiting", pth)
+			}
+		} else {
+			fmt.Printf("%s exists but with %d bytes, overwrite? (y/n): ", pth, fsize)
+			input := ConsolePrompt()
+			if input != "y" {
+				return fmt.Errorf("user declined to overwrite %s, exiting", pth)
+			}
+		}
+		f, err = os.OpenFile(pth, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644)
+		if err != nil {
+			return err
+
+		}
+	} else {
 		fmt.Printf("%s directory does not exist, creating\n", pth)
 		f, err = os.Create(pth)
 		if err != nil {
 			return &errd.FileCreateError{Path: pth, Err: err}
 		}
-		fmt.Printf("file created at %s\n", dir)
+		fmt.Printf("file successfully created at %s\n", dir)
 	}
 
 	n, err := f.Write(b)

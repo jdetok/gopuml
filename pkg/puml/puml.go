@@ -10,6 +10,7 @@ import (
 	"strings"
 
 	"github.com/jdetok/gopuml/pkg/errd"
+	"github.com/jdetok/gopuml/pkg/rgx"
 )
 
 type Puml struct {
@@ -101,11 +102,43 @@ type PumlWriter interface {
 
 type UmlClass struct {
 	Title string
+	r     *rgx.Rgx
 	// config/styling options
 }
 
+func NewUmlClass(title string, r *rgx.Rgx) *UmlClass {
+	return &UmlClass{Title: title, r: r}
+}
+
 func (d *UmlClass) Out() []byte {
-	return fmt.Appendf(nil, "@startuml %s\nclass Test {\n\ttest string\n}\n@enduml", d.Title)
+	return fmt.Appendf(nil, "@startuml %s\n%s\n@enduml", d.Title, d.BuildClass())
+}
+
+func (d *UmlClass) BuildClassDiagram() string {
+
+	classUmlStr := "@startuml\n"
+	// for package in dir map ...
+	classUmlStr += d.BuildClass()
+	classUmlStr += "@enduml\n"
+	return classUmlStr
+}
+
+func (d *UmlClass) BuildPackage() string {
+	// for struct/func in package map ...
+	return ""
+}
+
+func (d *UmlClass) BuildClass() string {
+	// for field in struct...
+	var classUmlStr string
+	for _, s := range d.r.Structs {
+		structStr := fmt.Sprintf("class %s {\n", s.Name)
+		for _, fld := range s.Fields {
+			structStr += fmt.Sprintf("\t%s %s\n", fld.Name, fld.DType)
+		}
+		classUmlStr += (structStr + "}\n")
+	}
+	return classUmlStr
 }
 
 type UmlActivity struct {

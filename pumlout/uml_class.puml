@@ -1,5 +1,94 @@
-@startuml Test Class Diagram
-class Test {
-	test string
+@startuml Test UML Class
+class Conf {
+	CnfPath string
+	ProjectName string
+	ProjectRoot string
+	ExcludeDirs []string
+	OutDir string
+	ClassF string
+	ActF string
 }
+class ErrMeta {
+	Caller string
+}
+class ConfDecodeError {
+	Path string
+	Err error
+}
+class FileCreateError {
+	Path string
+	Err error
+}
+class FileWriteError {
+	Path string
+	Err error
+}
+class FileOpenError {
+	Path string
+	Err error
+}
+class FileReadError {
+	Path string
+	Err error
+}
+class FileRecursionError {
+	Path string
+	Ftyp string
+	Err error
+}
+class FileAbsError {
+	Path string
+	Err error
+}
+class JSONEncodeError {
+	FName string
+	Err error
+}
+class WriterError {
+	WriterLoc string
+	NumBytes int
+	Err error
+}
+class Puml {
+	Dgm PumlWriter
+}
+class UmlClass {
+	Title string
+	r *rgx.Rgx
+}
+class UmlActivity {
+	Title string
+}
+class Rgx {
+	ready RgxReady
+	PkgMap RgxPkgMap
+	Funcs []*RgxFunc
+	Structs []*RgxStruct
+}
+class RgxMatch {
+	FindType string
+	MatchStr string
+	Groups []string
+}
+class RgxFunc {
+	Name string
+	Params string
+	Rtn string
+	IsMthd bool
+	BelongsTo string
+}
+class RgxStruct {
+	Name string
+	Fields []RgxStructFld
+}
+class RgxStructFld {
+	Name string
+	DType string
+	Cmnt string
+	Tag string
+}
+class Args {
+	Init bool
+}
+
 @enduml

@@ -58,7 +58,7 @@ func main() {
 	}
 
 	p := puml.Puml{
-		Dgm: &puml.UmlClass{Title: "Test Class Diagram"},
+		Dgm: puml.NewUmlClass("Test UML Class", r),
 	}
 	if err := p.WriteOutput(cnf.OutDir, cnf.ClassF); err != nil {
 		log.Fatal(err)

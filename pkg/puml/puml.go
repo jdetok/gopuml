@@ -80,7 +80,7 @@ func (p *Puml) WriteOutput(dir, fname string) error {
 				return fmt.Errorf("user declined to overwrite %s, exiting", pth)
 			}
 		} else {
-			fmt.Printf("** plantuml file %s exists with %d bytes of content - overwrite? (Y/n): ", pth, fsize)
+			fmt.Printf("** plantuml file %s exists with %d bytes of content - overwrite? (Y/): ", pth, fsize)
 			input := cli.ConsolePrompt()
 			switch input {
 			case "n":

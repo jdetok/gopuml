@@ -81,12 +81,6 @@ package puml {
 	}
 }
 package rgx {
-	package patterns {
-		class patterns_funcs {
-			+ MapRegexPatterns() RgxPatternMap 
-			+ CompileRgx() *RgxReady 
-		}
-	}
 	package rgx {
 		class rgx_funcs {
 			+ NewRgx() *Rgx 
@@ -138,6 +132,12 @@ package rgx {
 			+ DType string
 			+ Cmnt string
 			+ Tag string
+		}
+	}
+	package patterns {
+		class patterns_funcs {
+			+ MapRegexPatterns() RgxPatternMap 
+			+ CompileRgx() *RgxReady 
 		}
 	}
 }

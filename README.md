@@ -4,6 +4,9 @@
 - ***[plantuml](https://plantuml.com/)*** is an open-source tool that provides a domain-specific-modeling-language for creating [UML diagrams](https://en.wikipedia.org/wiki/Unified_Modeling_Language)
     - [plantuml syntax reference](https://plantuml.com/guide)
 
+## example UML Class Diagram for this repo created with gopuml:
+[!image](https://github.com/jdetok/gopuml/pumlout/example_class_uml_111525.png)
+
 # HOW TO USE/DEMO
 - clone and cd into the repo: `git clone https://github.com/jdetok/gopuml.git`
 - run gopuml on the repo

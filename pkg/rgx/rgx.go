@@ -4,10 +4,10 @@ import (
 	"bufio"
 	"fmt"
 	"os"
+	"path/filepath"
 	"regexp"
 
 	"github.com/jdetok/gopuml/pkg/dir"
-	"github.com/jdetok/gopuml/pkg/str"
 )
 
 // TODO: different pattern for methods/funcs
@@ -125,7 +125,7 @@ func CompileRgx() *RgxReady {
 func (r *Rgx) Parse(dm *dir.DirMap) error {
 	for d, fm := range *dm {
 		r.PkgMap[d] = RgxFileMap{}
-		fmt.Println(d)
+		fmt.Println("dir in parse: ", d)
 		for n := range fm {
 			f, err := dm.OpenFile(d, n)
 
@@ -138,6 +138,9 @@ func (r *Rgx) Parse(dm *dir.DirMap) error {
 				return err
 			}
 			// map *RgxFile to file name, which is mapped to dir name
+			if r.PkgMap[d][f.Name()] == nil {
+				r.PkgMap[d][f.Name()] = &RgxFile{}
+			}
 			r.PkgMap[d][f.Name()] = rf
 		}
 	}
@@ -147,7 +150,7 @@ func (r *Rgx) Parse(dm *dir.DirMap) error {
 // use bufio scanner to iterate through each line in passed file
 func (r *Rgx) RgxParseFile(dir string, f *os.File) (*RgxFile, error) {
 	defer f.Close()
-	fmt.Printf("parsing %s...\n", f.Name())
+	fmt.Printf("parsing %s...\n", filepath.Base(f.Name()))
 
 	if r.PkgMap[dir][f.Name()] == nil {
 		r.PkgMap[dir][f.Name()] = &RgxFile{}
@@ -172,20 +175,21 @@ func (r *Rgx) RgxParseFile(dir string, f *os.File) (*RgxFile, error) {
 
 		switch rm.FindType {
 		case FUNC:
-			rf.Funcs = append(r.Funcs,
+			rf.Funcs = append(rf.Funcs,
 				&RgxFunc{
 					Name:   rm.Groups[0],
 					Params: rm.Groups[1],
 					Rtn:    rm.Groups[2],
 				},
 			)
+			fmt.Printf("found func %s in RgxFile Pkg %s | File %s\n", rm.Groups[0], rf.Pkg, rf.Name)
 		case STRUCT:
 			var s = &RgxStruct{
 				Name: rm.Groups[0],
 			} // get fields from struct (scans lines until '}' is reached)
 			matches := r.RgxParseStruct(scanner, &lineCount)
 			for _, m := range matches {
-				fmt.Printf("%v\n", *m)
+				// fmt.Printf("%v\n", *m)
 				s.Fields = append(s.Fields,
 					RgxStructFld{
 						Name:  m.Groups[0],
@@ -193,10 +197,10 @@ func (r *Rgx) RgxParseFile(dir string, f *os.File) (*RgxFile, error) {
 					},
 				)
 			}
-
-			rf.Structs = append(r.Structs, s)
+			rf.Structs = append(rf.Structs, s)
+			fmt.Printf("found struct %s in RgxFile Pkg %s | File %s\n", rm.Groups[0], rf.Pkg, rf.Name)
 		case MTHD:
-			rf.Funcs = append(r.Funcs,
+			rf.Funcs = append(rf.Funcs,
 				&RgxFunc{
 					IsMthd:    true,
 					BelongsTo: rm.Groups[0],
@@ -205,6 +209,7 @@ func (r *Rgx) RgxParseFile(dir string, f *os.File) (*RgxFile, error) {
 					Rtn:       rm.Groups[3],
 				},
 			)
+			fmt.Printf("found method %s in %s in RgxFile Pkg %s | File %s\n", rm.Groups[1], rm.Groups[0], rf.Pkg, rf.Name)
 		}
 
 	}
@@ -224,11 +229,11 @@ func (r *Rgx) RgxParseLine(line string) *RgxMatch {
 			m.FindType = key
 			m.MatchStr = matches[0]
 			m.Groups = matches[1:]
-			groupStr := str.AngleWrap(m.Groups)
-			fmt.Printf("MATCH: %s\nKEY: %s | GROUPS: %s\n", m.FindType, key, groupStr)
-			if m.FindType != STRUCT {
-				fmt.Println()
-			}
+			// groupStr := str.AngleWrap(m.Groups)
+			// fmt.Printf("MATCH: %s\nKEY: %s | GROUPS: %s\n", m.FindType, key, groupStr)
+			// if m.FindType != STRUCT {
+			// 	fmt.Println()
+			// }
 			return &m
 		}
 	}

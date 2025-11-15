@@ -42,7 +42,12 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-
+	for d, fm := range *dirMap {
+		fmt.Printf("dir: %s\n", d)
+		for fname, abs := range fm {
+			fmt.Printf("  file key: %s -> path: %s\n", fname, abs)
+		}
+	}
 	// compile regex patterns
 	r := rgx.NewRgx()
 
@@ -50,12 +55,12 @@ func main() {
 	if err := r.Parse(dirMap); err != nil {
 		log.Fatal(err)
 	}
-	for _, fn := range r.Funcs {
-		fmt.Println(*fn)
-	}
-	for _, st := range r.Structs {
-		fmt.Println(st)
-	}
+	// for _, fn := range r.Funcs {
+	// 	fmt.Println(*fn)
+	// }
+	// for _, st := range r.Structs {
+	// 	fmt.Println(st)
+	// }
 
 	p := puml.Puml{
 		Dgm: puml.NewUmlClass("Test UML Class", r),

@@ -1,8 +1,4 @@
 @startuml Test UML Class
-package main {
-	package main {
-	}
-}
 package pkg/conf {
 	package conf {
 		class Conf {
@@ -24,6 +20,42 @@ package pkg/dir {
 }
 package pkg/errd {
 	package errd {
+		class ErrMeta {
+			Caller string
+		}
+		class ConfDecodeError {
+			Path string
+			Err error
+		}
+		class FileCreateError {
+			Path string
+			Err error
+		}
+		class FileWriteError {
+			Path string
+			Err error
+		}
+		class FileOpenError {
+			Path string
+			Err error
+		}
+		class FileReadError {
+			Path string
+			Err error
+		}
+		class FileRecursionError {
+			Path string
+			Ftyp string
+			Err error
+		}
+		class FileAbsError {
+			Path string
+			Err error
+		}
+		class JSONEncodeError {
+			FName string
+			Err error
+		}
 		class WriterError {
 			WriterLoc string
 			NumBytes int
@@ -33,6 +65,13 @@ package pkg/errd {
 }
 package pkg/puml {
 	package puml {
+		class Puml {
+			Dgm PumlWriter
+		}
+		class UmlClass {
+			Title string
+			r *rgx.Rgx
+		}
 		class UmlActivity {
 			Title string
 		}
@@ -40,6 +79,34 @@ package pkg/puml {
 }
 package pkg/rgx {
 	package rgx {
+		class Rgx {
+			ready RgxReady
+			PkgMap RgxPkgMap
+			Funcs []*RgxFunc
+			Structs []*RgxStruct
+		}
+		class RgxFile {
+			Pkg string
+			Name string
+			Funcs []*RgxFunc
+			Structs []*RgxStruct
+		}
+		class RgxMatch {
+			FindType string
+			MatchStr string
+			Groups []string
+		}
+		class RgxFunc {
+			Name string
+			Params string
+			Rtn string
+			IsMthd bool
+			BelongsTo string
+		}
+		class RgxStruct {
+			Name string
+			Fields []RgxStructFld
+		}
 		class RgxStructFld {
 			Name string
 			DType string
@@ -57,6 +124,10 @@ package cli {
 		class Args {
 			Init bool
 		}
+	}
+}
+package main {
+	package main {
 	}
 }
 

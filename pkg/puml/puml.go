@@ -115,27 +115,21 @@ func (d *UmlClass) Out() []byte {
 	return fmt.Appendf(nil, "@startuml %s\n%s\n@enduml", d.Title, d.BuildDiagram())
 }
 
-func (d *UmlClass) BuildClassDiagram() string {
-
-	classUmlStr := "@startuml\n"
-	// for package in dir map ...
-	classUmlStr += d.BuildClass()
-	classUmlStr += "@enduml\n"
-	return classUmlStr
-}
-
 func (d *UmlClass) BuildDiagram() string {
+	fmt.Println("outer len:", len(d.r.PkgMap))
 	// for struct/func in package map ...
 	// i need a connection from rgx to dirmap to build packages
 	diagramStr := ""
 	for pkg, file := range d.r.PkgMap {
+		fmt.Println("pkg len:", len(pkg))
 		pkgUmlStr := fmt.Sprintf("package %s {\n", pkg)
 		for fname, frgx := range file {
+			fmt.Println("file len:", len(file))
 			indent := "\t"
 			// INSIDE RGX FILE
 			fileUmlStr := fmt.Sprintf("%spackage %s {\n", indent, strings.TrimSuffix(filepath.Base(fname), ".go"))
 			for _, s := range frgx.Structs {
-				fmt.Println(s)
+				fmt.Println("struct", s.Name, "len:", len(file))
 				dblIndent := "\t\t"
 				structStr := fmt.Sprintf("%sclass %s {\n", dblIndent, s.Name)
 				for _, fld := range s.Fields {
@@ -149,19 +143,6 @@ func (d *UmlClass) BuildDiagram() string {
 		diagramStr += fmt.Sprintf("%s}\n", pkgUmlStr)
 	}
 	return diagramStr
-}
-
-func (d *UmlClass) BuildClass() string {
-	// for field in struct...
-	var classUmlStr string
-	for _, s := range d.r.Structs {
-		structStr := fmt.Sprintf("class %s {\n", s.Name)
-		for _, fld := range s.Fields {
-			structStr += fmt.Sprintf("\t%s %s\n", fld.Name, fld.DType)
-		}
-		classUmlStr += (structStr + "}\n")
-	}
-	return classUmlStr
 }
 
 type UmlActivity struct {

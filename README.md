@@ -5,7 +5,7 @@
     - [plantuml syntax reference](https://plantuml.com/guide)
 
 ## example UML Class Diagram for this repo created with gopuml:
-[!image](https://github.com/jdetok/gopuml/blob/main/pumlout/example_class_uml_111525.png)
+![image](https://github.com/jdetok/gopuml/blob/main/pumlout/example_class_uml_111525.png)
 
 # HOW TO USE/DEMO
 - clone and cd into the repo: `git clone https://github.com/jdetok/gopuml.git`

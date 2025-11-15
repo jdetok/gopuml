@@ -1,14 +1,17 @@
 {
     "project_name": "gopuml",
     "project_root": ".",
+    "languages": [
+        ".go"
+    ],
     "exclude_dirs": [
         ".git",
         "z_docs",
         "templates"
     ],
     "puml_out_dir": "pumlout",
-    "class_diagram_file": "uml_class",
-    "class_diagram_title": "Class Diagram",
-    "activity_diagram_file": "uml_activity",
-    "activity_diagram_title": "Activity Diagram"
+    "class_diagram_file": "sample_uml_class",
+    "class_diagram_title": "Sample Class Diagram",
+    "activity_diagram_file": "sample_uml_activity",
+    "activity_diagram_title": "Sample Activity Diagram"
 }

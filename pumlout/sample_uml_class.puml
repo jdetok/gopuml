@@ -1,29 +1,5 @@
-@startuml gopuml | Class Diagram
-package pkg/str {
-	package str {
-		class str_funs {
-			+ AngleWrap() string 
-		}
-	}
-}
-package cli {
-	package cli {
-		class cli_funs {
-			+ ParseArgs() *Args 
-			+ MapArgs() *ArgMap 
-		}
-		class Args {
-			+ Init bool
-		}
-	}
-}
-package main {
-	package main {
-		class main_funs {
-			+ main() 
-		}
-	}
-}
+@startuml gopuml_class_dgm
+title gopuml | Sample Class Diagram
 package pkg/conf {
 	package conf {
 		class conf_funs {
@@ -33,6 +9,7 @@ package pkg/conf {
 			+ CnfPath string
 			+ ProjectName string
 			+ ProjectRoot string
+			+ Langs []string
 			+ ExcludeDirs []string
 			+ OutDir string
 			+ ClassF string
@@ -119,6 +96,9 @@ package pkg/puml {
 		class puml_funs {
 			+ ConsolePrompt() string 
 			+ NewUmlClass() *UmlClass 
+			+ FileAsUMLPkg() string 
+			+ PkgLevelFuncs() string 
+			+ StructsInFile() string 
 		}
 		class Puml {
 			+ Dgm PumlWriter
@@ -181,6 +161,31 @@ package pkg/rgx {
 			+ DType string
 			+ Cmnt string
 			+ Tag string
+		}
+	}
+}
+package pkg/str {
+	package str {
+		class str_funs {
+			+ AngleWrap() string 
+		}
+	}
+}
+package cli {
+	package cli {
+		class cli_funs {
+			+ ParseArgs() *Args 
+			+ MapArgs() *ArgMap 
+		}
+		class Args {
+			+ Init bool
+		}
+	}
+}
+package main {
+	package main {
+		class main_funs {
+			+ main() 
 		}
 	}
 }

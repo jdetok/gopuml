@@ -4,7 +4,9 @@
     "exclude_dirs": [
         ".git"
     ],
-    "puml_out_dir": "",
-    "class_diagram_file": "",
-    "activity_diagram_file": ""
+    "puml_out_dir": "pumlout",
+    "class_diagram_file": "uml_class",
+    "class_diagram_title": "Class Diagram",
+    "activity_diagram_file": "uml_activity",
+    "activity_diagram_title": "Activity Diagram"
 }

@@ -19,7 +19,7 @@ func main() {
 	confFile := *args.ArgMap[cli.CONF]
 	ftyp := *args.ArgMap[cli.FTYP]
 
-	fmt.Println("init flag:", args.Init)
+	// fmt.Println("init flag:", args.Init)
 
 	// read the args for root and conf, join as filepath,
 	// read or create .gopuml.json conf file
@@ -42,12 +42,7 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	for d, fm := range *dirMap {
-		fmt.Printf("dir: %s\n", d)
-		for fname, abs := range fm {
-			fmt.Printf("  file key: %s -> path: %s\n", fname, abs)
-		}
-	}
+
 	// compile regex patterns
 	r := rgx.NewRgx()
 
@@ -55,6 +50,7 @@ func main() {
 	if err := r.Parse(dirMap); err != nil {
 		log.Fatal(err)
 	}
+	fmt.Printf("successfully parsed regular expressions in %s files\n", cnf.Langs[0])
 
 	p := puml.Puml{
 		Dgm: puml.NewUmlClass(fmt.Sprintf("%s | %s", cnf.ProjectName, cnf.ClassT), r),

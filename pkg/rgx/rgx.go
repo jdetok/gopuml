@@ -2,9 +2,7 @@ package rgx
 
 import (
 	"bufio"
-	"fmt"
 	"os"
-	"path/filepath"
 	"regexp"
 
 	"github.com/jdetok/gopuml/pkg/dir"
@@ -126,7 +124,7 @@ func CompileRgx() *RgxReady {
 func (r *Rgx) Parse(dm *dir.DirMap) error {
 	for d, fm := range *dm {
 		r.PkgMap[d] = RgxFileMap{}
-		fmt.Println("dir in parse: ", d)
+		// fmt.Println("dir in parse: ", d)
 		for n := range fm {
 			f, err := dm.OpenFile(d, n)
 
@@ -151,7 +149,7 @@ func (r *Rgx) Parse(dm *dir.DirMap) error {
 // use bufio scanner to iterate through each line in passed file
 func (r *Rgx) RgxParseFile(dir string, f *os.File) (*RgxFile, error) {
 	defer f.Close()
-	fmt.Printf("parsing %s...\n", filepath.Base(f.Name()))
+	// fmt.Printf("parsing %s...\n", filepath.Base(f.Name()))
 
 	if r.PkgMap[dir][f.Name()] == nil {
 		r.PkgMap[dir][f.Name()] = &RgxFile{}
@@ -183,7 +181,7 @@ func (r *Rgx) RgxParseFile(dir string, f *os.File) (*RgxFile, error) {
 					Rtn:    rm.Groups[2],
 				},
 			)
-			fmt.Printf("found func %s in RgxFile Pkg %s | File %s\n", rm.Groups[0], rf.Pkg, rf.Name)
+			// fmt.Printf("found func %s in RgxFile Pkg %s | File %s\n", rm.Groups[0], rf.Pkg, rf.Name)
 		case STRUCT:
 			var s = &RgxStruct{
 				Name: rm.Groups[0],
@@ -199,7 +197,7 @@ func (r *Rgx) RgxParseFile(dir string, f *os.File) (*RgxFile, error) {
 				)
 			}
 			rf.Structs = append(rf.Structs, s)
-			fmt.Printf("found struct %s in RgxFile Pkg %s | File %s\n", rm.Groups[0], rf.Pkg, rf.Name)
+			// fmt.Printf("found struct %s in RgxFile Pkg %s | File %s\n", rm.Groups[0], rf.Pkg, rf.Name)
 		case MTHD:
 			rf.Methods = append(rf.Methods,
 				&RgxFunc{
@@ -210,7 +208,7 @@ func (r *Rgx) RgxParseFile(dir string, f *os.File) (*RgxFile, error) {
 					Rtn:       rm.Groups[3],
 				},
 			)
-			fmt.Printf("found method %s in %s in RgxFile Pkg %s | File %s\n", rm.Groups[1], rm.Groups[0], rf.Pkg, rf.Name)
+			// fmt.Printf("found method %s in %s in RgxFile Pkg %s | File %s\n", rm.Groups[1], rm.Groups[0], rf.Pkg, rf.Name)
 		}
 
 	}

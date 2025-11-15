@@ -14,6 +14,7 @@ type Conf struct {
 	CnfPath     string
 	ProjectName string   `json:"project_name"`
 	ProjectRoot string   `json:"project_root"`
+	Langs       []string `json:"languages"`
 	ExcludeDirs []string `json:"exclude_dirs"`
 	OutDir      string   `json:"puml_out_dir"`
 	ClassF      string   `json:"class_diagram_file"`

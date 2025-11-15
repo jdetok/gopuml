@@ -103,8 +103,6 @@ type PumlWriter interface {
 type UmlClass struct {
 	Title string
 	r     *rgx.Rgx
-	// dm    *dir.DirMap
-	// config/styling options
 }
 
 func NewUmlClass(title string, r *rgx.Rgx) *UmlClass {
@@ -131,7 +129,7 @@ func (d *UmlClass) BuildDiagram() string {
 			// create plantuml class to represent functions in file not belonging to a struct
 			fileFuncsStr := fmt.Sprintf("%sclass %s_funs {\n", dblIndent, strings.TrimSuffix(filepath.Base(fname), ".go"))
 			for _, fn := range frgx.Funcs {
-				fileFuncsStr += fmt.Sprintf("%s%s() %s\n", tplIndent, fn.Name, fn.Rtn)
+				fileFuncsStr += fmt.Sprintf("%s+ %s() %s\n", tplIndent, fn.Name, fn.Rtn)
 			}
 			fileUmlStr += fmt.Sprintf("%s%s}\n", fileFuncsStr, dblIndent)
 
@@ -140,12 +138,12 @@ func (d *UmlClass) BuildDiagram() string {
 				structStr := fmt.Sprintf("%sclass %s {\n", dblIndent, s.Name)
 				// append each field in the struct
 				for _, fld := range s.Fields {
-					structStr += fmt.Sprintf("%s%s %s\n", tplIndent, fld.Name, fld.DType)
+					structStr += fmt.Sprintf("%s+ %s %s\n", tplIndent, fld.Name, fld.DType)
 				}
 				// append each method belonging to the struct (with or without * prefix)
 				for _, m := range frgx.Methods {
 					if strings.TrimPrefix(m.BelongsTo, "*") == s.Name {
-						structStr += fmt.Sprintf("%s%s() %s\n", tplIndent, m.Name, m.Rtn)
+						structStr += fmt.Sprintf("%s+ %s() %s\n", tplIndent, m.Name, m.Rtn)
 					}
 				}
 				// close struct class

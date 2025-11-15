@@ -55,15 +55,9 @@ func main() {
 	if err := r.Parse(dirMap); err != nil {
 		log.Fatal(err)
 	}
-	// for _, fn := range r.Funcs {
-	// 	fmt.Println(*fn)
-	// }
-	// for _, st := range r.Structs {
-	// 	fmt.Println(st)
-	// }
 
 	p := puml.Puml{
-		Dgm: puml.NewUmlClass("Test UML Class", r),
+		Dgm: puml.NewUmlClass(fmt.Sprintf("%s | %s", cnf.ProjectName, cnf.ClassT), r),
 	}
 	if err := p.WriteOutput(cnf.OutDir, cnf.ClassF); err != nil {
 		log.Fatal(err)

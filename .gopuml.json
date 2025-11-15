@@ -8,5 +8,7 @@
     ],
     "puml_out_dir": "pumlout",
     "class_diagram_file": "uml_class",
-    "activity_diagram_file": "uml_activity"
+    "class_diagram_title": "Class Diagram",
+    "activity_diagram_file": "uml_activity",
+    "activity_diagram_title": "Activity Diagram"
 }

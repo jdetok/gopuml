@@ -17,7 +17,9 @@ type Conf struct {
 	ExcludeDirs []string `json:"exclude_dirs"`
 	OutDir      string   `json:"puml_out_dir"`
 	ClassF      string   `json:"class_diagram_file"`
+	ClassT      string   `json:"class_diagram_title"`
 	ActF        string   `json:"activity_diagram_file"`
+	ActT        string   `json:"activity_diagram_title"`
 }
 
 func GetConf(fname string) (*Conf, error) {

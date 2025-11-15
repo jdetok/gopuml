@@ -1,28 +1,55 @@
-@startuml Test UML Class
+@startuml gopuml | Class Diagram
+package pkg/str {
+	package str {
+		class str_funs {
+			+ AngleWrap() string 
+		}
+	}
+}
+package cli {
+	package cli {
+		class cli_funs {
+			+ ParseArgs() *Args 
+			+ MapArgs() *ArgMap 
+		}
+		class Args {
+			+ Init bool
+		}
+	}
+}
+package main {
+	package main {
+		class main_funs {
+			+ main() 
+		}
+	}
+}
 package pkg/conf {
 	package conf {
 		class conf_funs {
-			GetConf() *Conf, error
+			+ GetConf() *Conf, error
 		}
 		class Conf {
-			CnfPath string
-			ProjectName string
-			ProjectRoot string
-			ExcludeDirs []string
-			OutDir string
-			ClassF string
-			ActF string
-			OpenConfigF() error 
-			ReadConf() error 
-			CreateConf() error 
+			+ CnfPath string
+			+ ProjectName string
+			+ ProjectRoot string
+			+ ExcludeDirs []string
+			+ OutDir string
+			+ ClassF string
+			+ ClassT string
+			+ ActF string
+			+ ActT string
+			+ OpenConfigF() error 
+			+ ReadConf() error 
+			+ CreateConf() error 
 		}
 	}
 }
 package pkg/dir {
 	package mapf {
 		class mapf_funs {
-			MapFiles() *DirMap, error
-			exclude() bool 
+			+ MapFiles() *DirMap, error
+			+ exclude() bool 
 		}
 	}
 	package readf {
@@ -35,150 +62,125 @@ package pkg/errd {
 		class errd_funs {
 		}
 		class ErrMeta {
-			Caller string
-			GetCaller() 
+			+ Caller string
+			+ GetCaller() 
 		}
 		class ConfDecodeError {
-			Path string
-			Err error
-			Error() string 
+			+ Path string
+			+ Err error
+			+ Error() string 
 		}
 		class FileCreateError {
-			Path string
-			Err error
-			Error() string 
+			+ Path string
+			+ Err error
+			+ Error() string 
 		}
 		class FileWriteError {
-			Path string
-			Err error
-			Error() string 
+			+ Path string
+			+ Err error
+			+ Error() string 
 		}
 		class FileOpenError {
-			Path string
-			Err error
-			Error() string 
+			+ Path string
+			+ Err error
+			+ Error() string 
 		}
 		class FileReadError {
-			Path string
-			Err error
-			Error() string 
+			+ Path string
+			+ Err error
+			+ Error() string 
 		}
 		class FileRecursionError {
-			Path string
-			Ftyp string
-			Err error
-			Error() string 
+			+ Path string
+			+ Ftyp string
+			+ Err error
+			+ Error() string 
 		}
 		class FileAbsError {
-			Path string
-			Err error
-			Error() string 
+			+ Path string
+			+ Err error
+			+ Error() string 
 		}
 		class JSONEncodeError {
-			FName string
-			Err error
-			Error() string 
+			+ FName string
+			+ Err error
+			+ Error() string 
 		}
 		class WriterError {
-			WriterLoc string
-			NumBytes int
-			Err error
-			Error() string 
+			+ WriterLoc string
+			+ NumBytes int
+			+ Err error
+			+ Error() string 
 		}
 	}
 }
 package pkg/puml {
 	package puml {
 		class puml_funs {
-			ConsolePrompt() string 
-			NewUmlClass() *UmlClass 
+			+ ConsolePrompt() string 
+			+ NewUmlClass() *UmlClass 
 		}
 		class Puml {
-			Dgm PumlWriter
-			WriteOutput() error 
+			+ Dgm PumlWriter
+			+ WriteOutput() error 
 		}
 		class UmlClass {
-			Title string
-			r *rgx.Rgx
-			Out() []byte 
-			BuildDiagram() string 
+			+ Title string
+			+ r *rgx.Rgx
+			+ Out() []byte 
+			+ BuildDiagram() string 
 		}
 		class UmlActivity {
-			Title string
-			Out() []byte 
+			+ Title string
+			+ Out() []byte 
 		}
 	}
 }
 package pkg/rgx {
 	package rgx {
 		class rgx_funs {
-			NewRgx() *Rgx 
-			CompileRgx() *RgxReady 
+			+ NewRgx() *Rgx 
+			+ CompileRgx() *RgxReady 
 		}
 		class Rgx {
-			ready RgxReady
-			PkgMap RgxPkgMap
-			Funcs []*RgxFunc
-			Structs []*RgxStruct
-			Parse() error 
-			RgxParseFile() *RgxFile, error
-			RgxParseLine() *RgxMatch 
-			RgxParseStruct() []*RgxMatch 
-			RgxParseStructFld() *RgxMatch, bool
+			+ ready RgxReady
+			+ PkgMap RgxPkgMap
+			+ Funcs []*RgxFunc
+			+ Structs []*RgxStruct
+			+ Parse() error 
+			+ RgxParseFile() *RgxFile, error
+			+ RgxParseLine() *RgxMatch 
+			+ RgxParseStruct() []*RgxMatch 
+			+ RgxParseStructFld() *RgxMatch, bool
 		}
 		class RgxFile {
-			Pkg string
-			Name string
-			Structs []*RgxStruct
-			Funcs []*RgxFunc
-			Methods []*RgxFunc
+			+ Pkg string
+			+ Name string
+			+ Structs []*RgxStruct
+			+ Funcs []*RgxFunc
+			+ Methods []*RgxFunc
 		}
 		class RgxMatch {
-			FindType string
-			MatchStr string
-			Groups []string
+			+ FindType string
+			+ MatchStr string
+			+ Groups []string
 		}
 		class RgxFunc {
-			Name string
-			Params string
-			Rtn string
-			IsMthd bool
-			BelongsTo string
+			+ Name string
+			+ Params string
+			+ Rtn string
+			+ IsMthd bool
+			+ BelongsTo string
 		}
 		class RgxStruct {
-			Name string
-			Fields []RgxStructFld
+			+ Name string
+			+ Fields []RgxStructFld
 		}
 		class RgxStructFld {
-			Name string
-			DType string
-			Cmnt string
-			Tag string
-		}
-	}
-}
-package pkg/str {
-	package str {
-		class str_funs {
-			AngleWrap() string 
-		}
-	}
-}
-package cli {
-	package cli {
-		class cli_funs {
-			ParseArgs() *Args 
-			MapArgs() *ArgMap 
-		}
-		class Args {
-			Init bool
-		}
-	}
-}
-package main {
-	package main {
-		class main_funs {
-			main() 
+			+ Name string
+			+ DType string
+			+ Cmnt string
+			+ Tag string
 		}
 	}
 }

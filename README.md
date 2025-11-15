@@ -14,7 +14,7 @@
 - view plantuml output:
     - by default, it will output to `./pumlout/sample_uml_class.puml`
     - the rendered UML output can be viewed using:
-        - [official online Plantuml editor](https://editor.plantuml.com/)
+        - copy and paste content of the `.puml` output file into the [official online Plantuml editor](https://editor.plantuml.com/)
         - [vs-code plantuml extension](https://marketplace.visualstudio.com/items?itemName=jebbs.plantuml)
         - any other tool that renders plantuml
             

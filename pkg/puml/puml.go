@@ -24,6 +24,7 @@ type Puml struct {
 type UmlClass struct {
 	Title string
 	r     *rgx.Rgx
+	// pkg   UmlClassPkg
 }
 
 func NewUmlClass(title string, r *rgx.Rgx) *UmlClass {

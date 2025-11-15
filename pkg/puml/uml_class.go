@@ -8,12 +8,18 @@ import (
 	"github.com/jdetok/gopuml/pkg/rgx"
 )
 
+// type UmlClassPkg struct {
+// 	Name string
+// 	Types []*
+// }
+
 // BUILD UML CLASS DIAGRAM STRING
 
 func (d *UmlClass) Build() []byte {
 	diagramStr := fmt.Sprintf("@startuml %s\n", d.Title)
 	// iterate through directories
 	for pkg, file := range d.r.PkgMap {
+		fmt.Println(pkg, "|", file)
 		// create outer plantuml package to represent each directory
 		pkgUmlStr := fmt.Sprintf("package %s {\n", pkg)
 

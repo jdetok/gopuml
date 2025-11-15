@@ -73,14 +73,14 @@ func (p *Puml) WriteOutput(dir, fname string) error {
 		// FILE EXISTS: ask user whether to overwrite or exit
 		fsize := info.Size()
 		if fsize == 0 {
-			fmt.Printf("** plantuml file %s exists but is empty - overwrite? (Y/N): ", pth)
+			fmt.Printf("** plantuml file %s exists but is empty - overwrite? (Y/n): ", pth)
 			input := cli.ConsolePrompt()
 			switch input {
 			case "n":
 				return fmt.Errorf("user declined to overwrite %s, exiting", pth)
 			}
 		} else {
-			fmt.Printf("** plantuml file %s exists with %d bytes of content - overwrite? (Y/N): ", pth, fsize)
+			fmt.Printf("** plantuml file %s exists with %d bytes of content - overwrite? (Y/n): ", pth, fsize)
 			input := cli.ConsolePrompt()
 			switch input {
 			case "n":

@@ -1,59 +1,36 @@
 package rgx
 
 import (
-	"regexp"
-)
+	"bufio"
+	"fmt"
+	"os"
+	"path/filepath"
+	"strings"
 
-// TODO: different pattern for methods/funcs
-const (
-	// keys in rgx map
-	EMPTY     = "empty" // match empty line
-	PKG       = "package"
-	CMNT      = "comment"   // match full line comment
-	FUNC      = "func"      // match functions that are not methods on a type
-	MTHD      = "method"    // match methods on a type
-	STRUCT    = "struct"    // match struct types
-	STRUCTFLD = "structFld" // match fields of a struct type
-	ENDSTMNT  = "structEnd" // match the END of a struct type - only '}'
-	TYPEMAP   = "typeMap"   // match map types (map aliased to a type)
+	"github.com/jdetok/gopuml/pkg/dir"
 )
-
-// all regex patterns compiled ahead of time into RegexReady map type
-var (
-	// map regex consts to their type const
-	RGX_MAP = map[string]string{
-		EMPTY:     RGX_EMPTY,
-		PKG:       RGX_PKG,
-		CMNT:      RGX_CMNT,
-		FUNC:      RGX_FUNC,
-		MTHD:      RGX_MTHD,
-		STRUCT:    RGX_STRUCT,
-		STRUCTFLD: RGX_STRUCT_FLD,
-		ENDSTMNT:  RGX_ENDSTMNT,
-		TYPEMAP:   RGX_TYPE_MAP,
-	}
-	// check lines in this specific order
-	RGX_CHECK_ORDER = []string{PKG, STRUCT, TYPEMAP, FUNC, MTHD, CMNT}
-)
-
-type RgxPatternMap map[string]string
 
 // think for each file i need to do a struct with arrays of funcs, structs, etc
 type Rgx struct {
-	ptrns   RgxPatternMap
-	ready   RgxReady
-	PkgMap  RgxPkgMap
-	RDirMap RgxDirMap
-	Funcs   []*RgxFunc
-	Structs []*RgxStruct
+	ptrns       RgxPatternMap
+	checkOrder  []string
+	ready       RgxReady
+	PkgMap      RgxPkgMap
+	RDirMap     RgxDirMap
+	Funcs       []*RgxFunc
+	Structs     []*RgxStruct
+	Connections RgxConnMap
 }
 
 func NewRgx() *Rgx {
+	ptrns := MapRegexPatterns()
 	return &Rgx{
-		ptrns:   RgxPatternMap{},
-		ready:   *CompileRgx(),
-		PkgMap:  RgxPkgMap{},
-		RDirMap: RgxDirMap{},
+		ptrns:       ptrns,
+		checkOrder:  []string{PKG, IMP, STRUCT, TYPEMAP, FUNC, MTHD, CMNT},
+		ready:       *CompileRgx(ptrns),
+		PkgMap:      RgxPkgMap{},
+		RDirMap:     RgxDirMap{},
+		Connections: RgxConnMap{},
 	}
 }
 
@@ -61,16 +38,18 @@ type RgxFile struct {
 	Pkg     string // package (dir) it belongs to
 	RgxPkg  string
 	Name    string // file
+	Imports []string
 	Structs []*RgxStruct
 	Funcs   []*RgxFunc
 	Methods []*RgxFunc
 }
 
-// map regexp objext to item name (can be used through runtime to match to)
-type RgxReady map[string]*regexp.Regexp
+type RgxConnMap map[string]map[string]struct{}
+
+// map directory string to file map
+type RgxDirMap map[string]RgxFileMap
 
 // map package string to file map
-type RgxDirMap map[string]RgxFileMap
 type RgxPkgMap map[string]RgxFileMap
 
 // map file name to rgx match type, each filemap is mapped to a package name
@@ -100,4 +79,250 @@ type RgxStructFld struct {
 	DType string // field type
 	Cmnt  string
 	Tag   string
+}
+
+// same idea as one with RgxReady passed, but capture package
+func (r *Rgx) Parse(dm *dir.DirMap) error {
+	for d, fm := range *dm {
+		r.RDirMap[d] = RgxFileMap{}
+		// fmt.Println("dir in parse: ", d)x
+		for n := range fm {
+			f, err := dm.OpenFile(d, n)
+
+			if err != nil {
+				return err
+			}
+			defer f.Close()
+			rf, err := r.RgxParseFile(d, f)
+			if err != nil {
+				return err
+			}
+			// map *RgxFile to file name, which is mapped to dir name
+			if r.RDirMap[d][f.Name()] == nil {
+				r.RDirMap[d][f.Name()] = &RgxFile{}
+			}
+			r.RDirMap[d][f.Name()] = rf
+			if r.PkgMap[rf.RgxPkg] == nil {
+				r.PkgMap[rf.RgxPkg] = RgxFileMap{}
+			}
+			r.PkgMap[rf.RgxPkg][f.Name()] = rf
+		}
+	}
+	r.FindConnections()
+	return nil
+}
+
+// build connection arrows betwen packages
+func (r *Rgx) FindConnections() {
+	for pkg, file := range r.PkgMap {
+		if r.Connections[pkg] == nil {
+			r.Connections[pkg] = map[string]struct{}{}
+		}
+		for _, f := range file {
+			for _, imp := range f.Imports {
+				impStr := strings.TrimSuffix(filepath.Base(imp), ".go")
+				// fmt.Printf("connections\n%s | %v\n", pkg, impStr)
+
+				// nmStr := strings.TrimSuffix(filepath.Base(name), ".go")
+				if _, ok := r.PkgMap[impStr]; ok {
+					fmt.Println(impStr, "matches", pkg)
+					r.Connections[pkg][impStr] = struct{}{}
+				}
+			}
+		}
+	}
+}
+
+// use bufio scanner to iterate through each line in passed file
+func (r *Rgx) RgxParseFile(dir string, f *os.File) (*RgxFile, error) {
+	defer f.Close()
+	fmt.Printf("parsing %s from %s...\n", filepath.Base(f.Name()), dir)
+
+	if r.RDirMap[dir][f.Name()] == nil {
+		r.RDirMap[dir][f.Name()] = &RgxFile{}
+	}
+
+	rf := RgxFile{
+		Pkg:  dir,
+		Name: f.Name(),
+	}
+
+	lineCount := 0
+	// insideStruct := false // used to handle struct fields
+	// scan each line of the file
+	scanner := bufio.NewScanner(f)
+	for scanner.Scan() {
+		lineCount++
+		line := scanner.Text() // get string of current line
+		rm := r.RgxParseLine(line)
+		if rm == nil {
+			continue
+		}
+
+		switch rm.FindType {
+		case PKG:
+			rf.RgxPkg = rm.Groups[0]
+			// fmt.Println("package", rm.Groups[0], "for file", rf.Name)
+		case IMP:
+			// fmt.Println("imports", rm.Groups[1], "for file", rf.Name)
+			switch rm.Groups[0] {
+			case `"`: // single line import
+				rf.Imports = append(rf.Imports, rm.Groups[1])
+			case "(": // multiple imports
+				matches := r.RgxParseImports(scanner, &lineCount)
+				for _, m := range matches {
+					rf.Imports = append(rf.Imports, m.Groups...)
+
+				}
+			}
+
+		case FUNC:
+			rf.Funcs = append(rf.Funcs,
+				&RgxFunc{
+					Name:   rm.Groups[0],
+					Params: rm.Groups[1],
+					Rtn:    rm.Groups[2],
+				},
+			)
+			// fmt.Printf("found func %s in RgxFile Pkg %s | File %s\n", rm.Groups[0], rf.Pkg, rf.Name)
+		case STRUCT:
+			var s = &RgxStruct{
+				Name: rm.Groups[0],
+			} // get fields from struct (scans lines until '}' is reached)
+			matches := r.RgxParseStruct(scanner, &lineCount)
+			for _, m := range matches {
+				// fmt.Printf("%v\n", *m)
+				s.Fields = append(s.Fields,
+					RgxStructFld{
+						Name:  m.Groups[0],
+						DType: m.Groups[1],
+					},
+				)
+			}
+			rf.Structs = append(rf.Structs, s)
+			// fmt.Printf("found struct %s in RgxFile Pkg %s | File %s\n", rm.Groups[0], rf.Pkg, rf.Name)
+		case MTHD:
+			rf.Methods = append(rf.Methods,
+				&RgxFunc{
+					IsMthd:    true,
+					BelongsTo: rm.Groups[0],
+					Name:      rm.Groups[1],
+					Params:    rm.Groups[2],
+					Rtn:       rm.Groups[3],
+				},
+			)
+			// fmt.Printf("found method %s in %s in RgxFile Pkg %s | File %s\n", rm.Groups[1], rm.Groups[0], rf.Pkg, rf.Name)
+		}
+
+	}
+	if r.PkgMap[rf.RgxPkg] == nil {
+		r.PkgMap[rf.RgxPkg] = RgxFileMap{}
+	}
+	if r.PkgMap[rf.RgxPkg][f.Name()] == nil {
+		r.PkgMap[rf.RgxPkg][f.Name()] = &RgxFile{}
+	}
+	r.PkgMap[rf.RgxPkg][f.Name()] = &rf
+	return &rf, nil
+}
+
+// pass line bytes and linenum, check for regex matches
+// return matches and a bool signaling whether next line is within a struct
+func (r *Rgx) RgxParseLine(line string) *RgxMatch {
+	var m RgxMatch
+	pkgRgx := r.ready[PKG]
+	if pkgMatch := pkgRgx.FindStringSubmatch(line); pkgMatch != nil {
+		m.FindType = PKG
+		m.MatchStr = pkgMatch[0]
+		m.Groups = pkgMatch[1:]
+	}
+	for _, key := range r.checkOrder {
+		rgx, ok := r.ready[key]
+		if !ok {
+			continue
+		}
+		if matches := rgx.FindStringSubmatch(line); matches != nil {
+			m.FindType = key
+			m.MatchStr = matches[0]
+			m.Groups = matches[1:]
+			return &m
+		}
+	}
+	return nil
+}
+
+func (r *Rgx) RgxParseStruct(s *bufio.Scanner, lineCount *int) []*RgxMatch {
+	insideStruct := true
+	matches := []*RgxMatch{}
+	for s.Scan() && insideStruct {
+		var rm *RgxMatch
+		*lineCount++
+		structLine := s.Text()
+
+		rm, insideStruct = r.RgxParseStructFld(structLine)
+		if rm == nil {
+			if insideStruct {
+				continue
+			} else {
+				break
+			}
+		}
+		matches = append(matches, rm)
+	}
+
+	// fmt.Printf("finished scanning struct from lines %d - %d\n", startLine, *lineCount)
+	return matches
+}
+
+func (r *Rgx) RgxParseImports(s *bufio.Scanner, lineCount *int) []*RgxMatch {
+	// fmt.Println("parsing multiple imports")
+	matches := []*RgxMatch{}
+	insideImp := true
+	for s.Scan() && insideImp {
+		var rm RgxMatch
+		*lineCount++
+		line := s.Text()
+
+		if r.ready[CLOSE_PAREN].MatchString(line) {
+			insideImp = false
+			break
+		}
+		if strMatches := r.ready[IMPKG].FindStringSubmatch(line); strMatches != nil {
+
+			rm.FindType = IMPKG
+			rm.MatchStr = strMatches[0]
+			rm.Groups = strMatches[1:]
+			// fmt.Println(rm.Groups)
+		}
+		// if rm == nil {
+		// 	if insideImp {
+		// 		continue
+		// 	} else {
+		// 		break
+		// 	}
+		// }
+		matches = append(matches, &rm)
+	}
+
+	// fmt.Printf("finished scanning struct from lines %d - %d\n", startLine, *lineCount)
+	return matches
+}
+
+// match fields inside a struct, only called from RgxParseStruct
+// the bool returned determines whether the struct has more fields or not
+func (r *Rgx) RgxParseStructFld(line string) (*RgxMatch, bool) {
+	// check for ; at end of struct def - send signal to end RgxParseStruct
+	if r.ready[ENDSTMNT].MatchString(line) {
+		return nil, false
+	}
+	// if not a ; check for fields | if nil return nil but true continue signal
+	matches := r.ready[STRUCTFLD].FindStringSubmatch(line)
+	if matches == nil {
+		return nil, true
+	}
+	// if field found build match struct
+	return &RgxMatch{
+		FindType: STRUCTFLD,
+		MatchStr: matches[0],
+		Groups:   matches[1:],
+	}, true
 }

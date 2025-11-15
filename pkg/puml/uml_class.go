@@ -8,18 +8,13 @@ import (
 	"github.com/jdetok/gopuml/pkg/rgx"
 )
 
-// type UmlClassPkg struct {
-// 	Name string
-// 	Types []*
-// }
-
 // BUILD UML CLASS DIAGRAM STRING
 
 func (d *UmlClass) Build() []byte {
 	diagramStr := fmt.Sprintf("@startuml %s\n", d.Title)
 	// iterate through directories
 	for pkg, file := range d.r.PkgMap {
-		fmt.Println(pkg, "|", file)
+		// fmt.Println(pkg, "|", file)
 		// create outer plantuml package to represent each directory
 		pkgUmlStr := fmt.Sprintf("package %s {\n", pkg)
 
@@ -30,7 +25,9 @@ func (d *UmlClass) Build() []byte {
 		}
 		// close directory package
 		diagramStr += fmt.Sprintf("%s}\n", pkgUmlStr)
+
 	}
+	diagramStr += d.ClassConnections()
 	return []byte((diagramStr + "\n@enduml"))
 }
 
@@ -72,4 +69,14 @@ func StructsInFile(structs []*rgx.RgxStruct, methods []*rgx.RgxFunc) string {
 		structsStr += fmt.Sprintf("%s\t\t}\n\t", structStr)
 	}
 	return structsStr
+}
+
+func (d *UmlClass) ClassConnections() string {
+	var conns string
+	for to, fromPkg := range d.r.Connections {
+		for from := range fromPkg {
+			conns += fmt.Sprintf("%s <-- %s\n", to, from)
+		}
+	}
+	return conns
 }

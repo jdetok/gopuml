@@ -1,8 +1,85 @@
-@startuml gopuml_class_dgm
-title gopuml | Sample Class Diagram
+@startuml gopuml | Sample Class Diagram
+package pkg/rgx {
+	package rgx {
+		class rgx_funcs {
+			+ NewRgx() *Rgx 
+			+ CompileRgx() *RgxReady 
+		}
+		class Rgx {
+			+ ready RgxReady
+			+ PkgMap RgxPkgMap
+			+ Funcs []*RgxFunc
+			+ Structs []*RgxStruct
+			+ Parse() error 
+			+ RgxParseFile() *RgxFile, error
+			+ RgxParseLine() *RgxMatch 
+			+ RgxParseStruct() []*RgxMatch 
+			+ RgxParseStructFld() *RgxMatch, bool
+		}
+		class RgxFile {
+			+ Pkg string
+			+ Name string
+			+ Structs []*RgxStruct
+			+ Funcs []*RgxFunc
+			+ Methods []*RgxFunc
+		}
+		class RgxMatch {
+			+ FindType string
+			+ MatchStr string
+			+ Groups []string
+		}
+		class RgxFunc {
+			+ Name string
+			+ Params string
+			+ Rtn string
+			+ IsMthd bool
+			+ BelongsTo string
+		}
+		class RgxStruct {
+			+ Name string
+			+ Fields []RgxStructFld
+		}
+		class RgxStructFld {
+			+ Name string
+			+ DType string
+			+ Cmnt string
+			+ Tag string
+		}
+	}
+}
+package pkg/str {
+	package str {
+		class str_funcs {
+			+ AngleWrap() string 
+		}
+	}
+}
+package cli {
+	package cli {
+		class cli_funcs {
+			+ ParseArgs() *Args 
+			+ MapArgs() *ArgMap 
+		}
+		class Args {
+			+ Init bool
+		}
+	}
+	package prompt {
+		class prompt_funcs {
+			+ ConsolePrompt() string 
+		}
+	}
+}
+package main {
+	package main {
+		class main_funcs {
+			+ main() 
+		}
+	}
+}
 package pkg/conf {
 	package conf {
-		class conf_funs {
+		class conf_funcs {
 			+ GetConf() *Conf, error
 		}
 		class Conf {
@@ -24,20 +101,14 @@ package pkg/conf {
 }
 package pkg/dir {
 	package mapf {
-		class mapf_funs {
+		class mapf_funcs {
 			+ MapFiles() *DirMap, error
 			+ exclude() bool 
-		}
-	}
-	package readf {
-		class readf_funs {
 		}
 	}
 }
 package pkg/errd {
 	package errd {
-		class errd_funs {
-		}
 		class ErrMeta {
 			+ Caller string
 			+ GetCaller() 
@@ -93,99 +164,27 @@ package pkg/errd {
 }
 package pkg/puml {
 	package puml {
-		class puml_funs {
-			+ ConsolePrompt() string 
+		class puml_funcs {
 			+ NewUmlClass() *UmlClass 
-			+ FileAsUMLPkg() string 
-			+ PkgLevelFuncs() string 
-			+ StructsInFile() string 
 		}
 		class Puml {
-			+ Dgm PumlWriter
+			+ Dgm Diagram
 			+ WriteOutput() error 
 		}
 		class UmlClass {
 			+ Title string
 			+ r *rgx.Rgx
-			+ Out() []byte 
-			+ BuildDiagram() string 
 		}
 		class UmlActivity {
 			+ Title string
-			+ Out() []byte 
+			+ Build() []byte 
 		}
 	}
-}
-package pkg/rgx {
-	package rgx {
-		class rgx_funs {
-			+ NewRgx() *Rgx 
-			+ CompileRgx() *RgxReady 
-		}
-		class Rgx {
-			+ ready RgxReady
-			+ PkgMap RgxPkgMap
-			+ Funcs []*RgxFunc
-			+ Structs []*RgxStruct
-			+ Parse() error 
-			+ RgxParseFile() *RgxFile, error
-			+ RgxParseLine() *RgxMatch 
-			+ RgxParseStruct() []*RgxMatch 
-			+ RgxParseStructFld() *RgxMatch, bool
-		}
-		class RgxFile {
-			+ Pkg string
-			+ Name string
-			+ Structs []*RgxStruct
-			+ Funcs []*RgxFunc
-			+ Methods []*RgxFunc
-		}
-		class RgxMatch {
-			+ FindType string
-			+ MatchStr string
-			+ Groups []string
-		}
-		class RgxFunc {
-			+ Name string
-			+ Params string
-			+ Rtn string
-			+ IsMthd bool
-			+ BelongsTo string
-		}
-		class RgxStruct {
-			+ Name string
-			+ Fields []RgxStructFld
-		}
-		class RgxStructFld {
-			+ Name string
-			+ DType string
-			+ Cmnt string
-			+ Tag string
-		}
-	}
-}
-package pkg/str {
-	package str {
-		class str_funs {
-			+ AngleWrap() string 
-		}
-	}
-}
-package cli {
-	package cli {
-		class cli_funs {
-			+ ParseArgs() *Args 
-			+ MapArgs() *ArgMap 
-		}
-		class Args {
-			+ Init bool
-		}
-	}
-}
-package main {
-	package main {
-		class main_funs {
-			+ main() 
+	package uml_class {
+		class uml_class_funcs {
+			+ FileAsUMLPkg() string 
+			+ PkgLevelFuncs() string 
+			+ StructsInFile() string 
 		}
 	}
 }

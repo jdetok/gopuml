@@ -15,6 +15,10 @@ type DirMap map[string]FileMap
 // FileMap maps a file name to a *os.File - FileMaps are mapped to DirMap
 type FileMap map[string]string
 
+func (dm DirMap) OpenFile(dir, file string) (*os.File, error) {
+	return os.Open(dm[dir][file])
+}
+
 // return DirFiles (maps files to their dir) mapped recursively
 // .git directory is excluded | only files ending in ftyp are mapped
 func MapFiles(rootDir, ftyp string, excludeDirs []string) (*DirMap, error) {

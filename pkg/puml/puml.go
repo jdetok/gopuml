@@ -1,7 +1,6 @@
 package puml
 
 import (
-	"bufio"
 	"errors"
 	"fmt"
 	"io/fs"
@@ -9,18 +8,35 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/jdetok/gopuml/cli"
 	"github.com/jdetok/gopuml/pkg/errd"
 	"github.com/jdetok/gopuml/pkg/rgx"
 )
 
-type Puml struct {
-	Dgm PumlWriter // different diagram structs
+type Diagram interface {
+	Build() []byte
 }
 
-func ConsolePrompt() string {
-	r := bufio.NewReader(os.Stdin)
-	input, _ := r.ReadString('\n')
-	return strings.TrimSpace(strings.ToLower(input))
+type Puml struct {
+	Dgm Diagram // different diagram structs
+}
+
+type UmlClass struct {
+	Title string
+	r     *rgx.Rgx
+}
+
+func NewUmlClass(title string, r *rgx.Rgx) *UmlClass {
+	return &UmlClass{Title: title, r: r}
+}
+
+type UmlActivity struct {
+	Title string
+	// config/styling options
+}
+
+func (d *UmlActivity) Build() []byte {
+	return []byte("@startuml\n@enduml")
 }
 
 func (p *Puml) WriteOutput(dir, fname string) error {
@@ -57,14 +73,14 @@ func (p *Puml) WriteOutput(dir, fname string) error {
 		fsize := info.Size()
 		if fsize == 0 {
 			fmt.Printf("** plantuml file %s exists but is empty - overwrite? (Y/N): ", pth)
-			input := ConsolePrompt()
+			input := cli.ConsolePrompt()
 			switch input {
 			case "n":
 				return fmt.Errorf("user declined to overwrite %s, exiting", pth)
 			}
 		} else {
 			fmt.Printf("** plantuml file %s exists with %d bytes of content - overwrite? (Y/N): ", pth, fsize)
-			input := ConsolePrompt()
+			input := cli.ConsolePrompt()
 			switch input {
 			case "n":
 				return fmt.Errorf("user declined to overwrite %s, exiting", pth)
@@ -85,97 +101,13 @@ func (p *Puml) WriteOutput(dir, fname string) error {
 	}
 
 	// get bytes with formatted plantuml source code (PumlWriter interface)
-	b := p.Dgm.Out()
+	pumlBytes := p.Dgm.Build()
 
 	// write bytes from PumlWriter implementation to file via io.Writer interface
-	n, err := f.Write(b)
+	n, err := f.Write(pumlBytes)
 	if err != nil {
 		return &errd.FileWriteError{Path: fname, Err: err}
 	}
 	fmt.Printf("wrote %d bytes to %s\n", n, pth)
 	return nil
-}
-
-type PumlWriter interface {
-	Out() []byte
-}
-
-type UmlClass struct {
-	Title string
-	r     *rgx.Rgx
-}
-
-func NewUmlClass(title string, r *rgx.Rgx) *UmlClass {
-	return &UmlClass{Title: title, r: r}
-}
-
-func (d *UmlClass) Out() []byte {
-	return fmt.Appendf(nil, "@startuml gopuml_class_dgm\ntitle %s\n%s\n@enduml",
-		d.Title, d.BuildDiagram())
-}
-
-func (d *UmlClass) BuildDiagram() string {
-	var diagramStr string
-
-	// iterate through directories
-	for pkg, file := range d.r.PkgMap {
-		// create outer plantuml package to represent each directory
-		pkgUmlStr := fmt.Sprintf("package %s {\n", pkg)
-
-		// build package for each file in directory
-		for fname, frgx := range file {
-			// create inner package to represent file
-			pkgUmlStr += (FileAsUMLPkg(fname, frgx) + "}\n")
-		}
-		// close directory package
-		diagramStr += fmt.Sprintf("%s}\n", pkgUmlStr)
-	}
-	return diagramStr
-}
-
-// return a string with plantuml syntax that creates a package per file to go in UML class diagram
-func FileAsUMLPkg(fname string, frgx *rgx.RgxFile) string {
-	fileUmlStr := fmt.Sprintf("\tpackage %s {\n", strings.TrimSuffix(filepath.Base(fname), ".go"))
-	fileUmlStr += fmt.Sprintf("%s\t\t}\n", PkgLevelFuncs(fname, frgx.Funcs))
-	return fmt.Sprintf("%s\t%s", fileUmlStr, StructsInFile(frgx.Structs, frgx.Methods))
-}
-
-// return string of uml class holding all funcs that aren't methods
-// funcs in a file that aren't preceeded with (s *SomeStruct)
-func PkgLevelFuncs(fname string, funcs []*rgx.RgxFunc) string {
-	fileFuncsStr := fmt.Sprintf("\t\tclass %s_funs {\n", strings.TrimSuffix(filepath.Base(fname), ".go"))
-	for _, fn := range funcs {
-		fileFuncsStr += fmt.Sprintf("\t\t\t+ %s() %s\n", fn.Name, fn.Rtn)
-	}
-	return fileFuncsStr
-}
-
-// return string with several uml classes, to be appended inside a package string
-func StructsInFile(structs []*rgx.RgxStruct, methods []*rgx.RgxFunc) string {
-	var structsStr string
-	for _, s := range structs {
-		structStr := fmt.Sprintf("\tclass %s {\n", s.Name)
-		// append each field in the struct
-		for _, fld := range s.Fields {
-			structStr += fmt.Sprintf("\t\t\t+ %s %s\n", fld.Name, fld.DType)
-		}
-		// append each method belonging to the struct (with or without * prefix)
-		for _, m := range methods {
-			if strings.TrimPrefix(m.BelongsTo, "*") == s.Name {
-				structStr += fmt.Sprintf("\t\t\t+ %s() %s\n", m.Name, m.Rtn)
-			}
-		}
-		// close struct class
-		structsStr += fmt.Sprintf("%s\t\t}\n\t", structStr)
-	}
-	return structsStr
-}
-
-type UmlActivity struct {
-	Title string
-	// config/styling options
-}
-
-func (d *UmlActivity) Out() []byte {
-	return []byte("@startuml\n@enduml")
 }

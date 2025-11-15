@@ -103,6 +103,7 @@ type PumlWriter interface {
 type UmlClass struct {
 	Title string
 	r     *rgx.Rgx
+	// dm    *dir.DirMap
 	// config/styling options
 }
 
@@ -111,7 +112,7 @@ func NewUmlClass(title string, r *rgx.Rgx) *UmlClass {
 }
 
 func (d *UmlClass) Out() []byte {
-	return fmt.Appendf(nil, "@startuml %s\n%s\n@enduml", d.Title, d.BuildClass())
+	return fmt.Appendf(nil, "@startuml %s\n%s\n@enduml", d.Title, d.BuildDiagram())
 }
 
 func (d *UmlClass) BuildClassDiagram() string {
@@ -123,9 +124,31 @@ func (d *UmlClass) BuildClassDiagram() string {
 	return classUmlStr
 }
 
-func (d *UmlClass) BuildPackage() string {
+func (d *UmlClass) BuildDiagram() string {
 	// for struct/func in package map ...
-	return ""
+	// i need a connection from rgx to dirmap to build packages
+	diagramStr := ""
+	for pkg, file := range d.r.PkgMap {
+		pkgUmlStr := fmt.Sprintf("package %s {\n", pkg)
+		for fname, frgx := range file {
+			indent := "\t"
+			// INSIDE RGX FILE
+			fileUmlStr := fmt.Sprintf("%spackage %s {\n", indent, strings.TrimSuffix(filepath.Base(fname), ".go"))
+			for _, s := range frgx.Structs {
+				fmt.Println(s)
+				dblIndent := "\t\t"
+				structStr := fmt.Sprintf("%sclass %s {\n", dblIndent, s.Name)
+				for _, fld := range s.Fields {
+					tplIndent := "\t\t\t"
+					structStr += fmt.Sprintf("%s%s %s\n", tplIndent, fld.Name, fld.DType)
+				}
+				fileUmlStr += fmt.Sprintf("%s%s}\n", structStr, dblIndent)
+			}
+			pkgUmlStr += fmt.Sprintf("%s%s}\n", fileUmlStr, indent)
+		}
+		diagramStr += fmt.Sprintf("%s}\n", pkgUmlStr)
+	}
+	return diagramStr
 }
 
 func (d *UmlClass) BuildClass() string {

@@ -1,94 +1,63 @@
 @startuml Test UML Class
-class Conf {
-	CnfPath string
-	ProjectName string
-	ProjectRoot string
-	ExcludeDirs []string
-	OutDir string
-	ClassF string
-	ActF string
+package main {
+	package main {
+	}
 }
-class ErrMeta {
-	Caller string
+package pkg/conf {
+	package conf {
+		class Conf {
+			CnfPath string
+			ProjectName string
+			ProjectRoot string
+			ExcludeDirs []string
+			OutDir string
+			ClassF string
+			ActF string
+		}
+	}
 }
-class ConfDecodeError {
-	Path string
-	Err error
+package pkg/dir {
+	package mapf {
+	}
+	package readf {
+	}
 }
-class FileCreateError {
-	Path string
-	Err error
+package pkg/errd {
+	package errd {
+		class WriterError {
+			WriterLoc string
+			NumBytes int
+			Err error
+		}
+	}
 }
-class FileWriteError {
-	Path string
-	Err error
+package pkg/puml {
+	package puml {
+		class UmlActivity {
+			Title string
+		}
+	}
 }
-class FileOpenError {
-	Path string
-	Err error
+package pkg/rgx {
+	package rgx {
+		class RgxStructFld {
+			Name string
+			DType string
+			Cmnt string
+			Tag string
+		}
+	}
 }
-class FileReadError {
-	Path string
-	Err error
+package pkg/str {
+	package str {
+	}
 }
-class FileRecursionError {
-	Path string
-	Ftyp string
-	Err error
-}
-class FileAbsError {
-	Path string
-	Err error
-}
-class JSONEncodeError {
-	FName string
-	Err error
-}
-class WriterError {
-	WriterLoc string
-	NumBytes int
-	Err error
-}
-class Puml {
-	Dgm PumlWriter
-}
-class UmlClass {
-	Title string
-	r *rgx.Rgx
-}
-class UmlActivity {
-	Title string
-}
-class Rgx {
-	ready RgxReady
-	PkgMap RgxPkgMap
-	Funcs []*RgxFunc
-	Structs []*RgxStruct
-}
-class RgxMatch {
-	FindType string
-	MatchStr string
-	Groups []string
-}
-class RgxFunc {
-	Name string
-	Params string
-	Rtn string
-	IsMthd bool
-	BelongsTo string
-}
-class RgxStruct {
-	Name string
-	Fields []RgxStructFld
-}
-class RgxStructFld {
-	Name string
-	DType string
-	Cmnt string
-	Tag string
-}
-class Args {
-	Init bool
+package cli {
+	package cli {
+		class Args {
+			Init bool
+		}
+	}
 }
 
 @enduml

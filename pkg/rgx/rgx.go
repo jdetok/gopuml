@@ -69,6 +69,13 @@ func NewRgx() *Rgx {
 	}
 }
 
+type RgxFile struct {
+	Pkg     string // package (dir) it belongs to
+	Name    string // file
+	Funcs   []*RgxFunc
+	Structs []*RgxStruct
+}
+
 // map regexp objext to item name (can be used through runtime to match to)
 type RgxReady map[string]*regexp.Regexp
 
@@ -76,7 +83,7 @@ type RgxReady map[string]*regexp.Regexp
 type RgxPkgMap map[string]RgxFileMap
 
 // map file name to rgx match type, each filemap is mapped to a package name
-type RgxFileMap map[string]*RgxMatch
+type RgxFileMap map[string]*RgxFile
 
 type RgxMatch struct {
 	FindType string   // func, struct, struct field, etc
@@ -126,24 +133,30 @@ func (r *Rgx) Parse(dm *dir.DirMap) error {
 				return err
 			}
 			defer f.Close()
-			if err := r.RgxParseFile(d, f); err != nil {
+			rf, err := r.RgxParseFile(d, f)
+			if err != nil {
 				return err
 			}
+			// map *RgxFile to file name, which is mapped to dir name
+			r.PkgMap[d][f.Name()] = rf
 		}
 	}
 	return nil
 }
 
 // use bufio scanner to iterate through each line in passed file
-func (r *Rgx) RgxParseFile(dir string, f *os.File) error {
+func (r *Rgx) RgxParseFile(dir string, f *os.File) (*RgxFile, error) {
 	defer f.Close()
 	fmt.Printf("parsing %s...\n", f.Name())
 
 	if r.PkgMap[dir][f.Name()] == nil {
-		r.PkgMap[dir][f.Name()] = &RgxMatch{}
+		r.PkgMap[dir][f.Name()] = &RgxFile{}
 	}
 
-	// var RgxP
+	rf := RgxFile{
+		Pkg:  dir,
+		Name: f.Name(),
+	}
 
 	lineCount := 0
 	// insideStruct := false // used to handle struct fields
@@ -159,7 +172,7 @@ func (r *Rgx) RgxParseFile(dir string, f *os.File) error {
 
 		switch rm.FindType {
 		case FUNC:
-			r.Funcs = append(r.Funcs,
+			rf.Funcs = append(r.Funcs,
 				&RgxFunc{
 					Name:   rm.Groups[0],
 					Params: rm.Groups[1],
@@ -180,9 +193,10 @@ func (r *Rgx) RgxParseFile(dir string, f *os.File) error {
 					},
 				)
 			}
-			r.Structs = append(r.Structs, s)
+
+			rf.Structs = append(r.Structs, s)
 		case MTHD:
-			r.Funcs = append(r.Funcs,
+			rf.Funcs = append(r.Funcs,
 				&RgxFunc{
 					IsMthd:    true,
 					BelongsTo: rm.Groups[0],
@@ -194,7 +208,7 @@ func (r *Rgx) RgxParseFile(dir string, f *os.File) error {
 		}
 
 	}
-	return nil
+	return &rf, nil
 }
 
 // pass line bytes and linenum, check for regex matches

@@ -116,30 +116,45 @@ func (d *UmlClass) Out() []byte {
 }
 
 func (d *UmlClass) BuildDiagram() string {
-	fmt.Println("outer len:", len(d.r.PkgMap))
-	// for struct/func in package map ...
-	// i need a connection from rgx to dirmap to build packages
-	diagramStr := ""
+	indent := "\t"
+	dblIndent := "\t\t"
+	tplIndent := "\t\t\t"
+	var diagramStr string
 	for pkg, file := range d.r.PkgMap {
-		fmt.Println("pkg len:", len(pkg))
+		// create outer plantuml package to represent each directory
 		pkgUmlStr := fmt.Sprintf("package %s {\n", pkg)
 		for fname, frgx := range file {
-			fmt.Println("file len:", len(file))
-			indent := "\t"
-			// INSIDE RGX FILE
+
+			// create inner package to represent file
 			fileUmlStr := fmt.Sprintf("%spackage %s {\n", indent, strings.TrimSuffix(filepath.Base(fname), ".go"))
+
+			// create plantuml class to represent functions in file not belonging to a struct
+			fileFuncsStr := fmt.Sprintf("%sclass %s_funs {\n", dblIndent, strings.TrimSuffix(filepath.Base(fname), ".go"))
+			for _, fn := range frgx.Funcs {
+				fileFuncsStr += fmt.Sprintf("%s%s() %s\n", tplIndent, fn.Name, fn.Rtn)
+			}
+			fileUmlStr += fmt.Sprintf("%s%s}\n", fileFuncsStr, dblIndent)
+
+			// create plantuml class for each struct in file
 			for _, s := range frgx.Structs {
-				fmt.Println("struct", s.Name, "len:", len(file))
-				dblIndent := "\t\t"
 				structStr := fmt.Sprintf("%sclass %s {\n", dblIndent, s.Name)
+				// append each field in the struct
 				for _, fld := range s.Fields {
-					tplIndent := "\t\t\t"
 					structStr += fmt.Sprintf("%s%s %s\n", tplIndent, fld.Name, fld.DType)
 				}
+				// append each method belonging to the struct (with or without * prefix)
+				for _, m := range frgx.Methods {
+					if strings.TrimPrefix(m.BelongsTo, "*") == s.Name {
+						structStr += fmt.Sprintf("%s%s() %s\n", tplIndent, m.Name, m.Rtn)
+					}
+				}
+				// close struct class
 				fileUmlStr += fmt.Sprintf("%s%s}\n", structStr, dblIndent)
 			}
+			// close file package
 			pkgUmlStr += fmt.Sprintf("%s%s}\n", fileUmlStr, indent)
 		}
+		// close directory package
 		diagramStr += fmt.Sprintf("%s}\n", pkgUmlStr)
 	}
 	return diagramStr

@@ -1,6 +1,9 @@
 @startuml Test UML Class
 package pkg/conf {
 	package conf {
+		class conf_funs {
+			GetConf() *Conf, error
+		}
 		class Conf {
 			CnfPath string
 			ProjectName string
@@ -9,87 +12,126 @@ package pkg/conf {
 			OutDir string
 			ClassF string
 			ActF string
+			OpenConfigF() error 
+			ReadConf() error 
+			CreateConf() error 
 		}
 	}
 }
 package pkg/dir {
 	package mapf {
+		class mapf_funs {
+			MapFiles() *DirMap, error
+			exclude() bool 
+		}
 	}
 	package readf {
+		class readf_funs {
+		}
 	}
 }
 package pkg/errd {
 	package errd {
+		class errd_funs {
+		}
 		class ErrMeta {
 			Caller string
+			GetCaller() 
 		}
 		class ConfDecodeError {
 			Path string
 			Err error
+			Error() string 
 		}
 		class FileCreateError {
 			Path string
 			Err error
+			Error() string 
 		}
 		class FileWriteError {
 			Path string
 			Err error
+			Error() string 
 		}
 		class FileOpenError {
 			Path string
 			Err error
+			Error() string 
 		}
 		class FileReadError {
 			Path string
 			Err error
+			Error() string 
 		}
 		class FileRecursionError {
 			Path string
 			Ftyp string
 			Err error
+			Error() string 
 		}
 		class FileAbsError {
 			Path string
 			Err error
+			Error() string 
 		}
 		class JSONEncodeError {
 			FName string
 			Err error
+			Error() string 
 		}
 		class WriterError {
 			WriterLoc string
 			NumBytes int
 			Err error
+			Error() string 
 		}
 	}
 }
 package pkg/puml {
 	package puml {
+		class puml_funs {
+			ConsolePrompt() string 
+			NewUmlClass() *UmlClass 
+		}
 		class Puml {
 			Dgm PumlWriter
+			WriteOutput() error 
 		}
 		class UmlClass {
 			Title string
 			r *rgx.Rgx
+			Out() []byte 
+			BuildDiagram() string 
 		}
 		class UmlActivity {
 			Title string
+			Out() []byte 
 		}
 	}
 }
 package pkg/rgx {
 	package rgx {
+		class rgx_funs {
+			NewRgx() *Rgx 
+			CompileRgx() *RgxReady 
+		}
 		class Rgx {
 			ready RgxReady
 			PkgMap RgxPkgMap
 			Funcs []*RgxFunc
 			Structs []*RgxStruct
+			Parse() error 
+			RgxParseFile() *RgxFile, error
+			RgxParseLine() *RgxMatch 
+			RgxParseStruct() []*RgxMatch 
+			RgxParseStructFld() *RgxMatch, bool
 		}
 		class RgxFile {
 			Pkg string
 			Name string
-			Funcs []*RgxFunc
 			Structs []*RgxStruct
+			Funcs []*RgxFunc
+			Methods []*RgxFunc
 		}
 		class RgxMatch {
 			FindType string
@@ -117,10 +159,17 @@ package pkg/rgx {
 }
 package pkg/str {
 	package str {
+		class str_funs {
+			AngleWrap() string 
+		}
 	}
 }
 package cli {
 	package cli {
+		class cli_funs {
+			ParseArgs() *Args 
+			MapArgs() *ArgMap 
+		}
 		class Args {
 			Init bool
 		}
@@ -128,6 +177,9 @@ package cli {
 }
 package main {
 	package main {
+		class main_funs {
+			main() 
+		}
 	}
 }
 

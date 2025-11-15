@@ -72,8 +72,9 @@ func NewRgx() *Rgx {
 type RgxFile struct {
 	Pkg     string // package (dir) it belongs to
 	Name    string // file
-	Funcs   []*RgxFunc
 	Structs []*RgxStruct
+	Funcs   []*RgxFunc
+	Methods []*RgxFunc
 }
 
 // map regexp objext to item name (can be used through runtime to match to)
@@ -200,7 +201,7 @@ func (r *Rgx) RgxParseFile(dir string, f *os.File) (*RgxFile, error) {
 			rf.Structs = append(rf.Structs, s)
 			fmt.Printf("found struct %s in RgxFile Pkg %s | File %s\n", rm.Groups[0], rf.Pkg, rf.Name)
 		case MTHD:
-			rf.Funcs = append(rf.Funcs,
+			rf.Methods = append(rf.Methods,
 				&RgxFunc{
 					IsMthd:    true,
 					BelongsTo: rm.Groups[0],

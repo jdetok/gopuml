@@ -29,7 +29,8 @@ func main() {
 		log.Fatal(err)
 	}
 
-	fmt.Println("root conf:", cnf.ProjectRoot)
+	// fmt.Println("root from conf:", cnf.ProjectRoot)
+	fmt.Println("root from conf:", rootDir)
 	// fmt.Println("root conf:", cnf.ProjectRoot)
 	if args.Init {
 		fmt.Println("conf file successfully created at", cnf.CnfPath)

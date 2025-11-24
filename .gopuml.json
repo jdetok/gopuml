@@ -9,7 +9,7 @@
         "z_docs",
         "templates"
     ],
-    "puml_out_dir": "pumlout",
+    "puml_out_dir": "pumlout1",
     "class_diagram_file": "sample_uml_class",
     "class_diagram_title": "Sample Class Diagram",
     "activity_diagram_file": "sample_uml_activity",

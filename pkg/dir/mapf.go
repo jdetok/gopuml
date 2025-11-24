@@ -3,6 +3,7 @@ package dir
 import (
 	"os"
 	"path/filepath"
+	"slices"
 	"strings"
 
 	"github.com/jdetok/gopuml/pkg/errd"
@@ -75,11 +76,7 @@ func (dm DirMap) MapRecur(dir, ftyp string, excludeDirs []string) error {
 	return nil
 }
 
+// returns true if checkDir exists in excludeDirs
 func exclude(checkDir string, excludeDirs []string) bool {
-	for _, dir := range excludeDirs {
-		if checkDir == dir {
-			return true
-		}
-	}
-	return false
+	return slices.Contains(excludeDirs, checkDir)
 }

@@ -1,0 +1,431 @@
+@startuml jdeko.me api | Class Diagram
+package memd {
+	package mapstore_cc {
+	}
+	package mapstore_test {
+		class mapstore_test_funcs {
+			+ TestMapPlayersCC() 
+		}
+	}
+	package search_ms {
+		class SznTmPlr {
+			+ PId uint64
+			+ TId uint64
+			+ SId int
+		}
+	}
+	package seasons {
+		class SeasonLeague {
+			+ SznId int
+			+ PSznId int
+			+ WSznId int
+			+ WPSznId int
+			+ Szn string
+			+ WSzn string
+		}
+		class CurrentSeasons {
+			+ PrevSznId int
+			+ CurSznId int
+			+ PrevPSznId int
+			+ CurPSznId int
+			+ PrevSzn string
+			+ CurSzn string
+			+ GetCurrentSzns() 
+			+ LgSznsByMonth() SeasonLeague 
+		}
+	}
+	package stataggs {
+		class stataggs_funcs {
+			+ TeamRecordsJSON() []byte, error
+			+ QueryTopLgPlayers() LgTopPlayers, error
+			+ MarshalTopPlayers() []byte, error
+		}
+		class TeamRecords {
+			+ NBARecords []TeamRecord
+			+ WNBARecords []TeamRecord
+		}
+		class TeamRecord {
+			+ League string
+			+ SeasonId int
+			+ Season string
+			+ SeasonDesc string
+			+ TeamId uint64
+			+ Team string
+			+ TeamLong string
+			+ Wins uint16
+			+ Losses uint16
+		}
+		class TopPlayers {
+			+ PlayerId uint64
+			+ Player string
+			+ Season string
+			+ Team string
+			+ Points uint32
+		}
+		class LgTopPlayers {
+			+ NBATop []TopPlayers
+			+ WNBATop []TopPlayers
+		}
+		class RecentGames {
+			+ TopScorers []PlayerBasic
+			+ Games []RecentGame
+			+ GetRecentGames() []byte, error
+			+ ScanRecentGamesRows() 
+		}
+		class PlayerBasic {
+			+ PlayerId uint64
+			+ TeamId uint64
+			+ Player string
+			+ League string
+			+ Points uint16
+			+ Assists uint16
+			+ Rebounds uint16
+		}
+		class RecentGame {
+			+ GameId uint64
+			+ TeamId uint64
+			+ PlayerId uint64
+			+ Player string
+			+ League string
+			+ Team string
+			+ TeamName string
+			+ GameDate string
+			+ Matchup string
+			+ WinLoss string
+			+ Points uint16
+			+ OppPoints uint16
+		}
+	}
+	package update {
+		class update_funcs {
+			+ UpdateTeamRecords() TeamRecords, error
+			+ UpdatePlayers() []Player, error
+			+ UpdateSeasons() []Season, error
+			+ UpdateTeams() []Team, error
+		}
+		class InMemStore {
+			+ Players []Player
+			+ Seasons []Season
+			+ Teams []Team
+			+ CurrentSzns CurrentSeasons
+			+ TeamRecs TeamRecords
+			+ TopLgPlayers LgTopPlayers
+		}
+		class Player {
+			+ PlayerId uint64
+			+ Name string
+			+ League string
+			+ SeasonIdMax int
+			+ SeasonIdMin int
+			+ PSeasonIdMax int
+			+ PSeasonIdMin int
+		}
+		class Season {
+			+ SeasonId string
+			+ Season string
+			+ WSeason string
+		}
+		class Team {
+			+ League string
+			+ TeamId string
+			+ TeamAbbr string
+			+ CityTeam string
+			+ LogoUrl string
+		}
+	}
+	package mapstore {
+		class mapstore_funcs {
+			+ MakeMaps() *StMaps 
+		}
+		class MapStore {
+			+ Maps *StMaps
+			+ mu sync.RWMutex
+			+ Persist() 
+			+ BuildFromPersist() 
+			+ Setup() error 
+			+ SetupFromBuild() error 
+			+ Set() 
+			+ Rebuild() error 
+		}
+		class StMaps {
+			+ mu sync.RWMutex
+			+ TeamIds map[string]uint64
+			+ TeamIdLg map[uint64]int
+			+ TmIdAbbr map[uint64]string
+			+ TmAbbrId map[string]uint64
+			+ LgTmIdAbbr map[int]map[uint64]string
+			+ LgTmAbbrId map[int]map[string]uint64
+			+ PlrIds map[uint64]struct{}
+			+ PlrNms map[string]struct{}
+			+ PlayerIdDtl map[uint64]*StPlayer
+			+ PlayerNameDtl map[string]*StPlayer
+			+ PlayerIdName map[uint64]string
+			+ PlayerNameId map[string]uint64
+			+ SeasonPlrNms map[int]map[string]uint64
+			+ SeasonPlrIds map[int]map[uint64]string
+			+ SznTmPlrIds map[int]map[uint64]map[uint64]string
+			+ NSznTmPlrIds map[int]map[uint64]map[uint64]string
+			+ WSznTmPlrIds map[int]map[uint64]map[uint64]string
+			+ MapTeamIdUints() error 
+			+ MapSeasons() error 
+			+ MapSznTeams() error 
+			+ SplitTeams() []uint64, error
+		}
+		class StPlayer {
+			+ Id uint64
+			+ Name string
+			+ Lowr string
+			+ Lg int
+			+ MaxRSzn int
+			+ MinRSzn int
+			+ MaxPSzn int
+			+ MinPSzn int
+			+ Teams []uint64
+		}
+	}
+}
+package pgdb {
+	package pgdb {
+		class pgdb_funcs {
+			+ PostgresConn() *sql.DB, error
+		}
+	}
+	package query {
+	}
+}
+package resp {
+	package resp {
+		class resp_funcs {
+			+ NewRespMeta() *RespMeta 
+		}
+		class RespMeta {
+			+ Request string
+			+ Url string
+			+ ErrorsOccurred uint
+			+ Errors []string
+			+ WriteResp() error 
+			+ CountErr() 
+		}
+	}
+	package bld_players {
+		class bld_players_funcs {
+			+ GetPlayerTeamSeason() PlayerTeamSeason, error
+			+ VerifyPlayerTeam() bool, error
+			+ VerifyPlayerTeamSeason() bool, error
+			+ RandomPlayerId() uint64 
+			+ MakeTeamLogoUrl() string 
+			+ HandleSeasonId() int 
+			+ SlicePlayersSzn() []memd.Player, error
+		}
+	}
+	package bld_v2_players {
+	}
+	package players_req {
+		class players_req_funcs {
+			+ PlayerFromQ() uint64, error
+			+ CleanPlayerReq() string 
+			+ SeasonFromQ() int, error
+			+ TeamFromQ() any, error
+			+ LgFromQ() int, error
+		}
+	}
+	package players_resp {
+		class players_resp_funcs {
+			+ NewRespPlayerDash() *RespPlayerDash 
+		}
+		class PlayerQuery {
+			+ Player string
+			+ Team string
+			+ Season string
+			+ League string
+		}
+		class PlayerTeamSeason {
+			+ Player string
+			+ Team string
+			+ Season string
+		}
+		class PQueryIds {
+			+ PId uint64
+			+ TId uint64
+			+ SId int
+		}
+		class RespPlayerDash {
+			+ Meta RespMeta
+			+ Results []RespObj
+			+ ErrorMsg string
+			+ WriteResp() error 
+		}
+		class RespObj {
+			+ Meta RespPlayerMeta
+			+ SeasonOvw RespPlayerSznOvw
+			+ Totals RespPlayerStats
+			+ PerGame RespPlayerStats
+		}
+		class RespPlayerMeta {
+			+ PlayerId uint64
+			+ TeamId uint64
+			+ League string
+			+ SeasonId uint64
+			+ StatType string
+			+ Player string
+			+ Team string
+			+ TeamName string
+			+ Season string
+			+ Caption string
+			+ CaptionShort string
+			+ BoxCapTot string
+			+ BoxCapAvg string
+			+ ShtgCapTot string
+			+ ShtgCapAvg string
+			+ HeadshotUrl string
+			+ TeamLogoUrl string
+		}
+		class RespPlayerSznOvw {
+			+ GamesPlayed uint16
+			+ Minutes float32
+			+ MinutsPerGame float32
+		}
+		class RespPlayerStats {
+			+ Box RespPlayerStatsBox
+			+ Shtg RespPlayerStatsShtg
+		}
+		class RespPlayerStatsBox {
+			+ Points float32
+			+ Assists float32
+			+ Rebounds float32
+			+ Steals float32
+			+ Blocks float32
+		}
+		class RespPlayerStatsShtg {
+			+ Fg RespPlayerStatsShtgType
+			+ Fg3 RespPlayerStatsShtgType
+			+ Ft RespPlayerStatsShtgType
+		}
+		class RespPlayerStatsShtgType {
+			+ Makes float32
+			+ Attempts float32
+			+ Percent string
+		}
+		class RespSeasonTmp {
+			+ Season string
+			+ WSeason string
+		}
+	}
+}
+package api {
+	package hndl_static {
+	}
+	package hndl_szn_teams {
+	}
+	package store {
+	}
+	package hndl_bb_players {
+	}
+	package hndl_bbv2_players {
+	}
+	package writers {
+	}
+	package z_api_test {
+		class z_api_test_funcs {
+			+ TestHandleSeasonId() 
+			+ TestLgSznsByMonth() 
+			+ TestQueryTopLgPlayers() 
+			+ StartupTest() *sql.DB 
+			+ TestGetPlayerDash() 
+			+ TestPlayerStore() 
+			+ TestTeamStore() 
+			+ TestSeasonStore() 
+			+ TestVerifyPlayerTeam() 
+			+ TestQueryPlayerTeam() 
+			+ TestGetPlayerTeamSeason() 
+			+ TestGetTeamRecords() 
+		}
+	}
+	package hndl_bb_ovw {
+	}
+	package api {
+		class App {
+			+ Addr string
+			+ DB *sql.DB
+			+ StartTime time.Time
+			+ LastUpdate time.Time
+			+ Started bool
+			+ Store memd.InMemStore
+			+ MStore memd.MapStore
+			+ Logf *os.File
+			+ Lg *logd.Logd
+			+ Mount() *http.ServeMux 
+			+ Run() error 
+			+ RunGraceful() error 
+		}
+	}
+}
+package main {
+	package main {
+		class main_funcs {
+			+ main() 
+		}
+	}
+}
+package clnd {
+	package cln {
+		class cln_funcs {
+			+ ConvToASCII() string 
+		}
+	}
+}
+package errd {
+	package errd {
+		class ErrMeta {
+			+ Caller string
+			+ GetCaller() 
+		}
+		class ValidationError {
+			+ Val any
+			+ Error() string 
+		}
+		class RequestError {
+			+ Msg string
+			+ Err error
+		}
+	}
+}
+package logd {
+	package logd {
+		class logd_funcs {
+			+ NewLogd() *Logd 
+			+ LogdWInit() *LogdW 
+			+ SetupLogdF() *os.File, error
+		}
+		class LogdW {
+			+ mu sync.Mutex
+			+ out io.Writer
+			+ Write() n int, err error
+		}
+		class Logd {
+			+ lw *LogdW
+			+ lg *log.Logger
+			+ log() 
+			+ LogHTTP() 
+			+ HTTPErr() 
+		}
+	}
+}
+memd <-- clnd
+memd <-- logd
+memd <-- errd
+memd <-- pgdb
+resp <-- pgdb
+resp <-- clnd
+resp <-- errd
+resp <-- memd
+api <-- resp
+api <-- memd
+api <-- clnd
+api <-- pgdb
+api <-- logd
+main <-- logd
+main <-- pgdb
+main <-- api
+
+@enduml

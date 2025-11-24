@@ -29,6 +29,8 @@ func main() {
 		log.Fatal(err)
 	}
 
+	fmt.Println("root conf:", cnf.ProjectRoot)
+	// fmt.Println("root conf:", cnf.ProjectRoot)
 	if args.Init {
 		fmt.Println("conf file successfully created at", cnf.CnfPath)
 	} else {
@@ -55,7 +57,8 @@ func main() {
 	p := puml.Puml{
 		Dgm: puml.NewUmlClass(fmt.Sprintf("%s | %s", cnf.ProjectName, cnf.ClassT), r),
 	}
-	if err := p.WriteOutput(cnf.OutDir, cnf.ClassF); err != nil {
+	fmt.Println(filepath.Join(cnf.ProjectRoot, cnf.OutDir))
+	if err := p.WriteOutput(filepath.Join(cnf.ProjectRoot, cnf.OutDir), cnf.ClassF); err != nil {
 		log.Fatal(err)
 	}
 }

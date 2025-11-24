@@ -42,7 +42,16 @@ func (d *UmlActivity) Build() []byte {
 
 func (p *Puml) WriteOutput(dir, fname string) error {
 	var err error
-
+	fmt.Println("DIR: ", dir)
+	fmt.Println("FNAME: ", fname)
+	if !filepath.IsAbs(dir) {
+		abs, err := filepath.Abs(dir)
+		if err != nil {
+			return err
+		}
+		dir = abs
+		fmt.Println(dir)
+	}
 	// check that directory exists
 	if _, err := os.Stat(dir); err != nil {
 		if errors.Is(err, fs.ErrNotExist) {

@@ -24,7 +24,7 @@ press N to exit
 	}
 	fmt.Println("continue with CLI setup implementation")
 	cnf.CLIFieldSetup()
-	fmt.Println(cnf)
+	cnf.CreateConf(fname)
 	// if not N, ask whether to create template file or continue with CLI setup
 	// setup - ask for each value
 	// TODO: better CLI function for console prommpt

@@ -2,7 +2,10 @@ package conf
 
 import (
 	"encoding/json"
+	"fmt"
 	"os"
+
+	"github.com/jdetok/gopuml/cli"
 
 	"github.com/jdetok/gopuml/pkg/errd"
 )
@@ -23,26 +26,25 @@ type Conf struct {
 	ActT        string   `json:"activity_diagram_title"`
 }
 
-func GetConf(fname string) (*Conf, error) {
-	var gp Conf
-	if err := gp.OpenConfigF(fname); err != nil {
-		return nil, err
-	}
-	return &gp, nil
-}
-
 // attempt read the file at fname - if doesn't exist, call CreateConf
-func (cnf *Conf) OpenConfigF(fname string) error {
+func DecodeJsonConf(fname string) (*Conf, error) {
+	info, err := os.Stat(fname)
+	if err == nil {
+		cli.AskBool(fmt.Sprintf(
+			"file with %d bytes exists at %s, continuing the CLI setup will overwrite the file\ncontinue? (Y/n)",
+			info.Size(), fname), "n")
+	}
+	var cnf *Conf
+
 	f, err := os.Open(fname)
 	if err == nil {
 		if err := json.NewDecoder(f).Decode(cnf); err != nil {
-			return &errd.ConfDecodeError{Path: fname, Err: err}
+			return nil, &errd.ConfDecodeError{Path: fname, Err: err}
 		}
 		defer f.Close()
 		cnf.CnfPath = f.Name()
-		return nil
 	}
-	return cnf.CreateConf(fname)
+	return cnf, nil
 }
 
 // conf file exists - decode the JSON to JSONConf struct fields
@@ -51,7 +53,7 @@ func (cnf *Conf) ReadConf(f *os.File) error {
 }
 
 // conf file does not exist - create one in the root dir
-func (cnf *Conf) CreateConf(fname string) error {
+func (cnf *Conf) CreateJson(fname string) error {
 	f, err := os.Create(fname)
 	if err != nil {
 		return &errd.FileCreateError{Path: fname, Err: err}

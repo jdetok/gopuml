@@ -16,44 +16,40 @@ import (
 )
 
 func main() {
+	var err error
+	var userExit *errd.UserExit // used for graceful shutdown
+	var cnf *conf.Conf
+
 	// get args passed with program execution
 	args := *cli.ParseArgs()
+
+	// root flag
 	rootDir := *args.ArgMap[cli.ROOT]
+
+	// ftyp flag
 	ftyp := *args.ArgMap[cli.FTYP]
+
+	// .gopuml.conf file location
 	confFile := *args.ArgMap[cli.CONF]
 	confPath := filepath.Join(rootDir, confFile)
 
-	var err error
-	var cnf *conf.Conf
-
-	// fmt.Println("init flag:", args.Init)
-	// RUN INIT CONFIG SETUP
+	// if init flag is passed, run cli setup to create file
 	if args.Init {
 		// setup file
-		cnf, err = conf.Setup(confPath)
+		cnf, err = conf.CLISetup(confPath)
 		if err != nil {
 			log.Fatal(err)
 		}
-		// os.Exit(0)
-	}
-
-	// read the args for root and conf, join as filepath,
-	// read or create .gopuml.json conf file
-	cnf, err = conf.GetConf(confPath)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	// fmt.Println("root from conf:", cnf.ProjectRoot)
-
-	// fmt.Println("root conf:", cnf.ProjectRoot)
-	if args.Init {
 		fmt.Println("conf file successfully created at", cnf.CnfPath)
 	} else {
+		// read or .gopuml.json conf file
+		cnf, err = conf.DecodeJsonConf(confPath)
+		if err != nil {
+			log.Fatal(err)
+		}
 		fmt.Printf("conf file at %s successfully read and decoded into conf struct\n",
 			cnf.CnfPath)
 	}
-
 	// get the passed file type, recursively loop through root to find files
 	// with that type
 	dirMap, err := dir.MapFiles(rootDir, ftyp, cnf.ExcludeDirs)
@@ -75,10 +71,9 @@ func main() {
 	}
 	fmt.Println(filepath.Join(cnf.ProjectRoot, cnf.OutDir))
 
-	var ue *errd.UserExit
 	err = p.WriteOutput(filepath.Join(cnf.ProjectRoot, cnf.OutDir), cnf.ClassF)
 	if err != nil {
-		if errors.As(err, &ue) {
+		if errors.As(err, &userExit) {
 			fmt.Println(err)
 			os.Exit(0)
 		}

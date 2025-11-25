@@ -7,36 +7,44 @@ import (
 	"strings"
 
 	"github.com/jdetok/gopuml/cli"
+	"github.com/jdetok/gopuml/pkg/errd"
 )
 
-// create new gopuml file if one doesn't exist
-func Setup(fname string) (*Conf, error) {
+// command line .gopuml.json setup - init flag must be passed
+// create config file from user input, return pointer to Conf struct and write
+// the generated .gopuml.json file to the project root
+func CLISetup(fname string) (*Conf, error) {
 	cnf := Conf{}
 
-	// TODO: first, check if a file already exists and confirm user want to continue
-
-	next := cli.AskBool(`gopuml called with --init flag
-press enter (return) to configure .gopuml.json
-press N to exit
-	 `, "n")
+	next := cli.AskBool(
+		"user passed init flag - starting .gopuml.json CLI setup\n"+
+			"press enter (return) to continue or N to exit\n...", "n")
 
 	if !next {
 		fmt.Println("user exit")
-		return nil, nil
+		return nil, &errd.UserExit{}
 	}
-	fmt.Println("continue with CLI setup implementation")
-	if err := cnf.CLIFieldSetup(); err != nil {
+	fmt.Print("continuing with .gopuml.json CLI setup...\n\n")
+
+	// prompt user to provide value for each field in conf struct
+	if err := cnf.FieldsFromUser(); err != nil {
 		return &cnf, err
 	}
 
-	if err := cnf.CreateConf(fname); err != nil {
+	//
+	if err := cnf.CreateJson(fname); err != nil {
 		return &cnf, err
 	}
 
 	return &cnf, nil
 }
 
-func (cnf *Conf) CLIFieldSetup() error {
+// iterate through the fields in the Conf struct
+// for each field, if a json tag is found with any string
+// other than "" or "-", the user is prompted to provide a value for the field
+// the reflect package is used to set the corresponding input value as the value
+// in the reflect.StructField
+func (cnf *Conf) FieldsFromUser() error {
 	// check that value is addressable
 	cv := reflect.ValueOf(cnf)
 	if cv.Kind() != reflect.Pointer || cv.IsNil() {

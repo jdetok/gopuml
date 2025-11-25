@@ -1,4 +1,55 @@
-@startuml test | cd
+@startuml test | c
+package cli {
+	package cli {
+		class cli_funcs {
+			+ ParseArgs() *Args 
+			+ MapArgs() *ArgMap 
+		}
+		class Args {
+			+ Init bool
+		}
+	}
+	package prompt {
+		class prompt_funcs {
+			+ ConsolePrompt() string 
+			+ AskBool() bool 
+			+ AskStr() string 
+		}
+	}
+}
+package main {
+	package main {
+		class main_funcs {
+			+ main() 
+		}
+	}
+}
+package conf {
+	package setup {
+		class setup_funcs {
+			+ CLISetup() *Conf, error
+		}
+	}
+	package conf {
+		class conf_funcs {
+			+ DecodeJsonConf() *Conf, error
+		}
+		class Conf {
+			+ CnfPath string
+			+ ProjectName string
+			+ ProjectRoot string
+			+ Langs []string
+			+ ExcludeDirs []string
+			+ OutDir string
+			+ ClassF string
+			+ ClassT string
+			+ ActF string
+			+ ActT string
+			+ ReadConf() error 
+			+ CreateJson() error 
+		}
+	}
+}
 package dir {
 	package mapf {
 		class mapf_funcs {
@@ -162,70 +213,18 @@ package str {
 		}
 	}
 }
-package cli {
-	package cli {
-		class cli_funcs {
-			+ ParseArgs() *Args 
-			+ MapArgs() *ArgMap 
-		}
-		class Args {
-			+ Init bool
-		}
-	}
-	package prompt {
-		class prompt_funcs {
-			+ ConsolePrompt() string 
-			+ AskBool() bool 
-			+ AskStr() string 
-		}
-	}
-}
-package main {
-	package main {
-		class main_funcs {
-			+ main() 
-		}
-	}
-}
-package conf {
-	package conf {
-		class conf_funcs {
-			+ GetConf() *Conf, error
-		}
-		class Conf {
-			+ CnfPath string
-			+ ProjectName string
-			+ ProjectRoot string
-			+ Langs []string
-			+ ExcludeDirs []string
-			+ OutDir string
-			+ ClassF string
-			+ ClassT string
-			+ ActF string
-			+ ActT string
-			+ OpenConfigF() error 
-			+ ReadConf() error 
-			+ CreateConf() error 
-		}
-	}
-	package setup {
-		class setup_funcs {
-			+ Setup() *Conf, error
-		}
-	}
-}
-main <-- rgx
-main <-- cli
-main <-- conf
-main <-- dir
-main <-- errd
-main <-- puml
-conf <-- errd
-conf <-- cli
-dir <-- errd
 puml <-- cli
 puml <-- errd
 puml <-- rgx
 rgx <-- dir
+main <-- errd
+main <-- puml
+main <-- rgx
+main <-- cli
+main <-- conf
+main <-- dir
+conf <-- cli
+conf <-- errd
+dir <-- errd
 
 @enduml

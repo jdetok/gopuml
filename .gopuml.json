@@ -7,9 +7,9 @@
     "exclude_dirs": [
         ".git"
     ],
-    "puml_out_dir": "put",
-    "class_diagram_file": "cd",
-    "class_diagram_title": "cd",
-    "activity_diagram_file": "ac",
-    "activity_diagram_title": "ac"
+    "puml_out_dir": "pumlout",
+    "class_diagram_file": "c",
+    "class_diagram_title": "c",
+    "activity_diagram_file": "c",
+    "activity_diagram_title": "c"
 }

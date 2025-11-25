@@ -13,12 +13,17 @@ func ConsolePrompt() string {
 	return strings.TrimSpace(strings.ToLower(input))
 }
 
-func Ask(prompt, no string) bool {
-	fmt.Println(prompt)
+func AskBool(prompt, no string) bool {
+	fmt.Print(prompt)
 	answer := ConsolePrompt()
 	switch answer {
 	case no:
 		return false // caller gracefully exits
 	}
 	return true
+}
+
+func AskStr(prompt string) string {
+	fmt.Print(prompt)
+	return ConsolePrompt()
 }

@@ -23,6 +23,12 @@ func main() {
 	ftyp := *args.ArgMap[cli.FTYP]
 
 	// fmt.Println("init flag:", args.Init)
+	// RUN INIT CONFIG SETUP
+	if args.Init {
+		// setup file
+		conf.Setup()
+		os.Exit(0)
+	}
 
 	// read the args for root and conf, join as filepath,
 	// read or create .gopuml.json conf file

@@ -2,6 +2,7 @@ package errd
 
 import (
 	"fmt"
+	"path/filepath"
 	"runtime"
 )
 
@@ -44,6 +45,18 @@ type FileWriteError struct {
 
 func (e *FileWriteError) Error() string {
 	return fmt.Sprintf("failed to create file %s\n%v", e.Path, e.Err)
+}
+
+type UserExit struct {
+	ErrMeta
+	Path     string
+	Err      error
+	NumBytes int64
+}
+
+func (e *UserExit) Error() string {
+	return fmt.Sprintf("user declined to overwrite %d bytes in %s,\nexiting!",
+		e.NumBytes, filepath.Base(e.Path))
 }
 
 type FileOpenError struct {

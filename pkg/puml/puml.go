@@ -42,8 +42,6 @@ func (d *UmlActivity) Build() []byte {
 
 func (p *Puml) WriteOutput(dir, fname string) error {
 	var err error
-	fmt.Println("DIR: ", dir)
-	fmt.Println("FNAME: ", fname)
 	if !filepath.IsAbs(dir) {
 		abs, err := filepath.Abs(dir)
 		if err != nil {
@@ -86,14 +84,16 @@ func (p *Puml) WriteOutput(dir, fname string) error {
 			input := cli.ConsolePrompt()
 			switch input {
 			case "n":
-				return fmt.Errorf("user declined to overwrite %s, exiting", pth)
+				return &errd.UserExit{Path: pth, NumBytes: fsize}
 			}
 		} else {
-			fmt.Printf("** plantuml file %s exists with %d bytes of content - overwrite? (Y/): ", pth, fsize)
+			fmt.Printf(
+				"** plantuml file %s exists with %d bytes of content - overwrite? (Y/N): ",
+				pth, fsize)
 			input := cli.ConsolePrompt()
 			switch input {
 			case "n":
-				return fmt.Errorf("user declined to overwrite %s, exiting", pth)
+				return &errd.UserExit{Path: pth, NumBytes: fsize}
 			}
 		}
 		// open EXISTING file only after confirming whether overwrite is ok

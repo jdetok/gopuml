@@ -23,17 +23,23 @@ func main() {
 	confFile := *args.ArgMap[cli.CONF]
 	confPath := filepath.Join(rootDir, confFile)
 
+	var err error
+	var cnf *conf.Conf
+
 	// fmt.Println("init flag:", args.Init)
 	// RUN INIT CONFIG SETUP
 	if args.Init {
 		// setup file
-		conf.Setup(confPath)
-		os.Exit(0)
+		cnf, err = conf.Setup(confPath)
+		if err != nil {
+			log.Fatal(err)
+		}
+		// os.Exit(0)
 	}
 
 	// read the args for root and conf, join as filepath,
 	// read or create .gopuml.json conf file
-	cnf, err := conf.GetConf(confPath)
+	cnf, err = conf.GetConf(confPath)
 	if err != nil {
 		log.Fatal(err)
 	}

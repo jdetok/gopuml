@@ -1,0 +1,231 @@
+@startuml test | cd
+package dir {
+	package mapf {
+		class mapf_funcs {
+			+ MapFiles() *DirMap, error
+			+ exclude() bool 
+		}
+	}
+}
+package errd {
+	package errd {
+		class ErrMeta {
+			+ Caller string
+			+ GetCaller() 
+		}
+		class ConfDecodeError {
+			+ Path string
+			+ Err error
+			+ Error() string 
+		}
+		class FileCreateError {
+			+ Path string
+			+ Err error
+			+ Error() string 
+		}
+		class FileWriteError {
+			+ Path string
+			+ Err error
+			+ Error() string 
+		}
+		class UserExit {
+			+ Path string
+			+ Err error
+			+ NumBytes int64
+			+ Error() string 
+		}
+		class FileOpenError {
+			+ Path string
+			+ Err error
+			+ Error() string 
+		}
+		class FileReadError {
+			+ Path string
+			+ Err error
+			+ Error() string 
+		}
+		class FileRecursionError {
+			+ Path string
+			+ Ftyp string
+			+ Err error
+			+ Error() string 
+		}
+		class FileAbsError {
+			+ Path string
+			+ Err error
+			+ Error() string 
+		}
+		class JSONEncodeError {
+			+ FName string
+			+ Err error
+			+ Error() string 
+		}
+		class WriterError {
+			+ WriterLoc string
+			+ NumBytes int
+			+ Err error
+			+ Error() string 
+		}
+	}
+}
+package puml {
+	package puml {
+		class puml_funcs {
+			+ NewUmlClass() *UmlClass 
+		}
+		class Puml {
+			+ Dgm Diagram
+			+ WriteOutput() error 
+		}
+		class UmlClass {
+			+ Title string
+			+ r *rgx.Rgx
+		}
+		class UmlActivity {
+			+ Title string
+			+ Build() []byte 
+		}
+	}
+	package uml_class {
+		class uml_class_funcs {
+			+ FileAsUMLPkg() string 
+			+ PkgLevelFuncs() string 
+			+ StructsInFile() string 
+		}
+	}
+}
+package rgx {
+	package patterns {
+		class patterns_funcs {
+			+ MapRegexPatterns() RgxPatternMap 
+			+ CompileRgx() *RgxReady 
+		}
+	}
+	package rgx {
+		class rgx_funcs {
+			+ NewRgx() *Rgx 
+		}
+		class Rgx {
+			+ ptrns RgxPatternMap
+			+ checkOrder []string
+			+ ready RgxReady
+			+ PkgMap RgxPkgMap
+			+ RDirMap RgxDirMap
+			+ Funcs []*RgxFunc
+			+ Structs []*RgxStruct
+			+ Connections RgxConnMap
+			+ Parse() error 
+			+ FindConnections() 
+			+ RgxParseFile() *RgxFile, error
+			+ RgxParseLine() *RgxMatch 
+			+ RgxParseStruct() []*RgxMatch 
+			+ RgxParseImports() []*RgxMatch 
+			+ RgxParseStructFld() *RgxMatch, bool
+		}
+		class RgxFile {
+			+ Pkg string
+			+ RgxPkg string
+			+ Name string
+			+ Imports []string
+			+ Structs []*RgxStruct
+			+ Funcs []*RgxFunc
+			+ Methods []*RgxFunc
+		}
+		class RgxMatch {
+			+ FindType string
+			+ MatchStr string
+			+ Groups []string
+		}
+		class RgxFunc {
+			+ Name string
+			+ Params string
+			+ Rtn string
+			+ IsMthd bool
+			+ BelongsTo string
+		}
+		class RgxStruct {
+			+ Name string
+			+ Fields []RgxStructFld
+		}
+		class RgxStructFld {
+			+ Name string
+			+ DType string
+			+ Cmnt string
+			+ Tag string
+		}
+	}
+}
+package str {
+	package str {
+		class str_funcs {
+			+ AngleWrap() string 
+		}
+	}
+}
+package cli {
+	package cli {
+		class cli_funcs {
+			+ ParseArgs() *Args 
+			+ MapArgs() *ArgMap 
+		}
+		class Args {
+			+ Init bool
+		}
+	}
+	package prompt {
+		class prompt_funcs {
+			+ ConsolePrompt() string 
+			+ AskBool() bool 
+			+ AskStr() string 
+		}
+	}
+}
+package main {
+	package main {
+		class main_funcs {
+			+ main() 
+		}
+	}
+}
+package conf {
+	package conf {
+		class conf_funcs {
+			+ GetConf() *Conf, error
+		}
+		class Conf {
+			+ CnfPath string
+			+ ProjectName string
+			+ ProjectRoot string
+			+ Langs []string
+			+ ExcludeDirs []string
+			+ OutDir string
+			+ ClassF string
+			+ ClassT string
+			+ ActF string
+			+ ActT string
+			+ OpenConfigF() error 
+			+ ReadConf() error 
+			+ CreateConf() error 
+		}
+	}
+	package setup {
+		class setup_funcs {
+			+ Setup() *Conf, error
+		}
+	}
+}
+main <-- rgx
+main <-- cli
+main <-- conf
+main <-- dir
+main <-- errd
+main <-- puml
+conf <-- errd
+conf <-- cli
+dir <-- errd
+puml <-- cli
+puml <-- errd
+puml <-- rgx
+rgx <-- dir
+
+@enduml

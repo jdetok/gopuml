@@ -10,8 +10,10 @@ import (
 )
 
 // create new gopuml file if one doesn't exist
-func Setup(fname string) *Conf {
+func Setup(fname string) (*Conf, error) {
 	cnf := Conf{}
+
+	// TODO: first, check if a file already exists and confirm user want to continue
 
 	next := cli.AskBool(`gopuml called with --init flag
 press enter (return) to configure .gopuml.json
@@ -20,16 +22,18 @@ press N to exit
 
 	if !next {
 		fmt.Println("user exit")
-		return nil
+		return nil, nil
 	}
 	fmt.Println("continue with CLI setup implementation")
-	cnf.CLIFieldSetup()
-	cnf.CreateConf(fname)
-	// if not N, ask whether to create template file or continue with CLI setup
-	// setup - ask for each value
-	// TODO: better CLI function for console prommpt
+	if err := cnf.CLIFieldSetup(); err != nil {
+		return &cnf, err
+	}
 
-	return &cnf
+	if err := cnf.CreateConf(fname); err != nil {
+		return &cnf, err
+	}
+
+	return &cnf, nil
 }
 
 func (cnf *Conf) CLIFieldSetup() error {
@@ -55,7 +59,7 @@ func (cnf *Conf) CLIFieldSetup() error {
 
 		// get the name of the json field the structfield encodes to
 		confFld := fld.Tag.Get("json")
-		if confFld == "" {
+		if confFld == "" || confFld == "-" {
 			continue
 		}
 

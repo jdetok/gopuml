@@ -11,7 +11,7 @@ import (
 
 // read from JSON config file
 type Conf struct {
-	CnfPath     string
+	CnfPath     string   `json:"-"`
 	ProjectName string   `json:"project_name"`
 	ProjectRoot string   `json:"project_root"`
 	Langs       []string `json:"languages"`
